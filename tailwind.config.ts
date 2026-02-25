@@ -14,8 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ["Fredoka", "sans-serif"],
-        body: ["Inter", "sans-serif"],
+        display: ["Montserrat", "sans-serif"],
+        body: ["Montserrat", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
