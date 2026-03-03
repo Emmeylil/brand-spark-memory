@@ -32,30 +32,39 @@ const GameBoard = ({
   matchedPairs, totalPairs, onFlip, onBack,
 }: GameBoardProps) => {
   const timeWarning = timeLeft <= 10;
+  const progress = (matchedPairs / totalPairs) * 100;
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-sm mx-auto px-4 animate-fade-in">
-      {/* Header */}
+    <div className="flex flex-col gap-5 w-full max-w-sm mx-auto px-4 animate-fade-in">
+      {/* Top bar */}
       <div className="flex items-center justify-between">
         <button
           onClick={onBack}
-          className="text-gray-400 hover:text-primary transition-colors text-sm font-black uppercase tracking-widest flex items-center gap-1"
+          className="text-muted-foreground hover:text-primary transition-colors text-sm font-black uppercase tracking-widest flex items-center gap-1.5"
         >
-          <span className="text-xl">←</span> Exit
+          <span className="text-lg">←</span> Exit
         </button>
-        <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter">
-          {matchedPairs} / {totalPairs} Cleared
+        <div className="glass-card text-primary px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm">
+          {matchedPairs} / {totalPairs} Matched
         </div>
       </div>
 
-      {/* Score display */}
-      <div className="text-center py-2">
-        <p className="text-gray-400 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Current Score</p>
-        <p className="text-5xl font-black text-primary tracking-tighter drop-shadow-sm">{score.toLocaleString()}</p>
+      {/* Score */}
+      <div className="text-center">
+        <p className="text-muted-foreground text-[10px] font-black uppercase tracking-[0.2em] mb-0.5">Score</p>
+        <p className="text-5xl font-black text-primary tracking-tighter">{score.toLocaleString()}</p>
+      </div>
+
+      {/* Progress bar */}
+      <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+        <div
+          className="h-full bg-gradient-to-r from-primary to-orange-400 rounded-full transition-all duration-500 ease-out"
+          style={{ width: `${progress}%` }}
+        />
       </div>
 
       {/* Grid */}
-      <div className={`grid ${gridClass[difficulty]} gap-2 sm:gap-4 p-2 bg-white/30 backdrop-blur-md rounded-3xl border border-white/50 shadow-inner`}>
+      <div className={`grid ${gridClass[difficulty]} gap-2.5 p-3 glass-card rounded-3xl shadow-lg`}>
         {cards.map((card) => (
           <MemoryCard
             key={card.id}
@@ -69,18 +78,16 @@ const GameBoard = ({
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="bg-white rounded-2xl p-4 border border-primary/10 shadow-sm flex flex-col items-center justify-center">
-          <p className={`text-2xl font-black ${timeWarning ? "text-red-500 animate-pulse" : "text-gray-800"}`}>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="glass-card rounded-2xl p-4 shadow-sm flex flex-col items-center justify-center">
+          <p className={`text-3xl font-black ${timeWarning ? "text-destructive animate-pulse" : ""}`}>
             {timeLeft}s
           </p>
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Time</p>
+          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-0.5">Time</p>
         </div>
-        <div className="bg-white rounded-2xl p-4 border border-primary/10 shadow-sm flex flex-col items-center justify-center">
-          <p className="text-2xl font-black text-gray-800">
-            {flips}
-          </p>
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Flips</p>
+        <div className="glass-card rounded-2xl p-4 shadow-sm flex flex-col items-center justify-center">
+          <p className="text-3xl font-black">{flips}</p>
+          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-0.5">Flips</p>
         </div>
       </div>
     </div>

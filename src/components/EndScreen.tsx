@@ -28,13 +28,13 @@ const EndScreen = ({ isWon, reward, score, flips, difficulty, onReplay, dailyPla
 
   if (showLeaderboard) {
     return (
-      <div className="flex flex-col items-center gap-6 w-full max-w-2xl px-4">
+      <div className="flex flex-col items-center gap-6 w-full max-w-2xl px-4 animate-fade-in">
         <Leaderboard />
         <Button
           onClick={() => setShowLeaderboard(false)}
-          className="bg-primary hover:bg-primary/90 text-white font-bold py-6 text-lg rounded-xl shadow-md w-full max-w-sm"
+          className="w-full max-w-sm h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-black text-lg rounded-2xl shadow-lg"
         >
-          Back to Results
+          ← Back to Results
         </Button>
       </div>
     );
@@ -42,55 +42,67 @@ const EndScreen = ({ isWon, reward, score, flips, difficulty, onReplay, dailyPla
 
   return (
     <div className="flex flex-col items-center gap-6 animate-scale-in w-full max-w-sm mx-auto px-4 text-center">
-      <div className="text-6xl mb-2">
-        {isWon ? "🏆" : "⌛"}
-      </div>
+      {/* Icon */}
+      <div className="text-7xl">{isWon ? "🏆" : "⏰"}</div>
 
+      {/* Title */}
       <div className="space-y-2">
-        <h2 className="text-4xl font-bold text-gray-800">
-          {isWon ? "Nicely Done!" : "Time's Over!"}
+        <h2 className="text-4xl font-black tracking-tight">
+          {isWon ? "Nicely Done!" : "Time's Up!"}
         </h2>
-        <p className="text-gray-500 font-medium">
+        <p className="text-muted-foreground font-medium">
           {isWon
-            ? `Fantastic! You cleared ${difficulty} mode in ${flips} flips.`
-            : "Don't give up! Every match counts towards the top spot."}
+            ? `You cleared ${difficulty} mode in ${flips} flips.`
+            : "Don't give up! Every match counts."}
         </p>
       </div>
 
-      {/* Score */}
-      <div className="bg-white border-2 border-primary/20 rounded-3xl p-8 w-full shadow-lg transform rotate-1">
-        <p className="text-12 text-gray-400 font-bold uppercase tracking-widest mb-1">Your Score</p>
-        <p className="text-6xl font-black text-primary drop-shadow-sm">{score.toLocaleString()}</p>
+      {/* Score Card */}
+      <div className="glass-card rounded-3xl p-8 w-full shadow-xl">
+        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mb-1">Your Score</p>
+        <p className="text-6xl font-black text-primary tracking-tighter">{score.toLocaleString()}</p>
+        <div className="flex justify-center gap-6 mt-4 pt-4 border-t border-border">
+          <div>
+            <p className="text-xl font-black">{flips}</p>
+            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Flips</p>
+          </div>
+          <div className="w-px bg-border" />
+          <div>
+            <p className="text-xl font-black capitalize">{difficulty}</p>
+            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Mode</p>
+          </div>
+        </div>
       </div>
 
+      {/* Reward */}
       {reward && (
-        <div className="bg-primary/5 border-2 border-primary/20 border-dashed rounded-3xl p-6 w-full transform -rotate-1">
-          <p className="text-primary font-bold text-xl mb-1">{reward}</p>
-          <p className="text-xs text-gray-500 font-medium">Claim this reward in your Jumia account!</p>
+        <div className="w-full bg-primary/5 border-2 border-primary/20 border-dashed rounded-2xl p-5">
+          <p className="text-primary font-black text-lg">{reward}</p>
+          <p className="text-xs text-muted-foreground font-medium mt-1">Claim this in your Jumia account!</p>
         </div>
       )}
 
+      {/* Actions */}
       <div className="flex flex-col gap-3 w-full">
         <Button
           onClick={onReplay}
-          className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-8 text-xl rounded-2xl shadow-xl transition-all active:scale-[0.98] hover:scale-[1.02]"
+          className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-black text-xl rounded-2xl shadow-xl glow-primary transition-all active:scale-[0.98] hover:scale-[1.01]"
         >
-          {dailyPlaysLeft > 0 ? "Play Again" : "Return home"}
+          {dailyPlaysLeft > 0 ? "Play Again →" : "Return Home"}
         </Button>
-
         <Button
           variant="outline"
           onClick={() => setShowLeaderboard(true)}
-          className="w-full border-primary text-primary hover:bg-primary/10 font-bold py-6 text-lg rounded-2xl"
+          className="w-full h-12 border-primary/20 text-primary hover:bg-primary/5 font-bold text-base rounded-2xl"
         >
-          View Leaderboard
+          🏅 View Leaderboard
         </Button>
       </div>
 
-      <p className="text-sm font-bold text-gray-400">
+      <p className="text-xs font-bold text-muted-foreground">
         {dailyPlaysLeft > 0
-          ? `${dailyPlaysLeft} play${dailyPlaysLeft !== 1 ? "s" : ""} left for today`
-          : "You've reached your limit - see you tomorrow!"}
+          ? `${dailyPlaysLeft} play${dailyPlaysLeft !== 1 ? "s" : ""} left today`
+          : "Daily limit reached — see you tomorrow!"}
       </p>
     </div>
   );
