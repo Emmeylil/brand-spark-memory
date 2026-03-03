@@ -12,12 +12,16 @@ interface EndScreenProps {
   difficulty: string;
   onReplay: () => void;
   dailyPlaysLeft: number;
+  timeLeft: number;
 }
 
-const EndScreen = ({ isWon, reward, score, flips, difficulty, onReplay, dailyPlaysLeft }: EndScreenProps) => {
+const EndScreen = ({ isWon, reward, score, flips, difficulty, onReplay, dailyPlaysLeft, timeLeft }: EndScreenProps) => {
   const { user } = useAuth();
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+
+  const speedBonus = isWon ? timeLeft * 50 : 0;
+  const baseScore = score - speedBonus;
 
   useEffect(() => {
     if (isWon && user && !submitted) {
@@ -59,8 +63,15 @@ const EndScreen = ({ isWon, reward, score, flips, difficulty, onReplay, dailyPla
 
       {/* Score Card */}
       <div className="glass-card rounded-3xl p-8 w-full shadow-xl">
-        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mb-1">Your Score</p>
+        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mb-1">Your Total Score</p>
         <p className="text-6xl font-black text-primary tracking-tighter">{score.toLocaleString()}</p>
+
+        {isWon && timeLeft > 0 && (
+          <div className="mt-2 inline-flex items-center gap-1.5 bg-primary/10 text-primary px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider animate-pulse">
+            ⚡ {speedBonus.toLocaleString()} Speed Bonus
+          </div>
+        )}
+
         <div className="flex justify-center gap-6 mt-4 pt-4 border-t border-border">
           <div>
             <p className="text-xl font-black">{flips}</p>
@@ -71,6 +82,15 @@ const EndScreen = ({ isWon, reward, score, flips, difficulty, onReplay, dailyPla
             <p className="text-xl font-black capitalize">{difficulty}</p>
             <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Mode</p>
           </div>
+          {isWon && (
+            <>
+              <div className="w-px bg-border" />
+              <div>
+                <p className="text-xl font-black">{timeLeft}s</p>
+                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Left</p>
+              </div>
+            </>
+          )}
         </div>
       </div>
 

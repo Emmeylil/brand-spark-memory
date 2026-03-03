@@ -55,7 +55,7 @@ function getStoredData(): { plays: number; date: string; bestScores: Partial<Rec
       if (data.date === today) return data;
       return { plays: 0, date: today, bestScores: data.bestScores || {} };
     }
-  } catch {}
+  } catch { }
   return { plays: 0, date: new Date().toDateString(), bestScores: {} };
 }
 
@@ -190,7 +190,12 @@ export function useMemoryGame() {
               if (won) stopTimer();
 
               const points = MATCH_POINTS[p.difficulty];
-              const newScore = p.score + points;
+              let newScore = p.score + points;
+
+              if (won) {
+                const timeBonus = p.timeLeft * 50;
+                newScore += timeBonus;
+              }
 
               let reward: string | null = null;
               if (won) {

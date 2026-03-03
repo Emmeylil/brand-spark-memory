@@ -38,6 +38,7 @@ const Index = () => {
           difficulty={state.difficulty}
           onReplay={resetGame}
           dailyPlaysLeft={state.dailyPlaysLeft}
+          timeLeft={state.timeLeft}
         />
       )}
     </div>
