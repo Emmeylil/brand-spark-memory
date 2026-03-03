@@ -245,12 +245,11 @@ export function useMemoryGame() {
                     ? { ...c, isFlipped: false, animState: "idle" as const }
                     : c
                 );
-                const shuffledReset = shuffleUnmatchedCards(reset);
                 const lost = newMoves >= p.maxMoves;
                 if (lost) stopTimer();
                 flippedRef.current = [];
                 lockRef.current = false;
-                return { ...p, cards: lost ? reset : shuffledReset, isLost: lost };
+                return { ...p, cards: reset, isLost: lost };
               });
             }, 400);
           }, 600);
