@@ -1,13 +1,14 @@
 interface EndScreenProps {
   isWon: boolean;
   reward: string | null;
-  moves: number;
+  score: number;
+  flips: number;
   difficulty: string;
   onReplay: () => void;
   dailyPlaysLeft: number;
 }
 
-const EndScreen = ({ isWon, reward, moves, difficulty, onReplay, dailyPlaysLeft }: EndScreenProps) => {
+const EndScreen = ({ isWon, reward, score, flips, difficulty, onReplay, dailyPlaysLeft }: EndScreenProps) => {
   return (
     <div className="flex flex-col items-center gap-6 animate-scale-in w-full max-w-sm mx-auto px-4 text-center">
       <div className="text-6xl">
@@ -16,13 +17,19 @@ const EndScreen = ({ isWon, reward, moves, difficulty, onReplay, dailyPlaysLeft 
 
       <div className="space-y-2">
         <h2 className="text-3xl font-display text-foreground">
-          {isWon ? "You Won!" : "Game Over"}
+          {isWon ? "You Won!" : "Time's Up!"}
         </h2>
         <p className="text-muted-foreground text-sm">
           {isWon
-            ? `Completed ${difficulty} in ${moves} moves!`
+            ? `Completed ${difficulty} in ${flips} flips!`
             : "Better luck next time — try again!"}
         </p>
+      </div>
+
+      {/* Score */}
+      <div className="bg-card border border-border rounded-2xl p-5 w-full">
+        <p className="text-4xl font-display text-primary font-bold">{score} pts</p>
+        <p className="text-xs text-muted-foreground mt-1">Final Score</p>
       </div>
 
       {reward && (

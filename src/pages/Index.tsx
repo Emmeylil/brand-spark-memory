@@ -19,8 +19,8 @@ const Index = () => {
         <GameBoard
           cards={state.cards}
           difficulty={state.difficulty}
-          moves={state.moves}
-          maxMoves={state.maxMoves}
+          flips={state.flips}
+          score={state.score}
           timeLeft={state.timeLeft}
           matchedPairs={state.matchedPairs}
           totalPairs={state.totalPairs}
@@ -33,7 +33,8 @@ const Index = () => {
         <EndScreen
           isWon={isWon}
           reward={state.reward}
-          moves={state.moves}
+          score={state.score}
+          flips={state.flips}
           difficulty={state.difficulty}
           onReplay={resetGame}
           dailyPlaysLeft={state.dailyPlaysLeft}

@@ -12,8 +12,8 @@ interface Card {
 interface GameBoardProps {
   cards: Card[];
   difficulty: Difficulty;
-  moves: number;
-  maxMoves: number;
+  flips: number;
+  score: number;
   timeLeft: number;
   matchedPairs: number;
   totalPairs: number;
@@ -28,12 +28,10 @@ const gridClass: Record<Difficulty, string> = {
 };
 
 const GameBoard = ({
-  cards, difficulty, moves, maxMoves, timeLeft,
+  cards, difficulty, flips, score, timeLeft,
   matchedPairs, totalPairs, onFlip, onBack,
 }: GameBoardProps) => {
-  const movesLeft = maxMoves - moves;
   const timeWarning = timeLeft <= 10;
-  const movesWarning = movesLeft <= 3;
 
   return (
     <div className="flex flex-col gap-4 w-full max-w-sm mx-auto px-4 animate-fade-in">
@@ -50,9 +48,11 @@ const GameBoard = ({
         </p>
       </div>
 
-      <p className="text-center text-sm text-muted-foreground">
-        Flip the cards to find matching pairs
-      </p>
+      {/* Score display */}
+      <div className="text-center">
+        <p className="text-3xl font-display text-primary font-bold tracking-tight">{score} pts</p>
+        <p className="text-xs text-muted-foreground mt-0.5">Flip the cards to find matching pairs</p>
+      </div>
 
       {/* Grid */}
       <div className={`grid ${gridClass[difficulty]} gap-2 sm:gap-3`}>
@@ -78,10 +78,10 @@ const GameBoard = ({
         </div>
         <div className="w-px h-8 bg-border" />
         <div className="text-center">
-          <p className={`text-xl font-display ${movesWarning ? "text-destructive animate-pulse-glow" : "text-foreground"}`}>
-            {movesLeft}
+          <p className="text-xl font-display text-foreground">
+            {flips}
           </p>
-          <p className="text-xs text-muted-foreground">Moves left</p>
+          <p className="text-xs text-muted-foreground">Flips</p>
         </div>
       </div>
     </div>

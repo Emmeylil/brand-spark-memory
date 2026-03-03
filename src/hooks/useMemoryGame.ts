@@ -12,8 +12,8 @@ interface Card {
 
 interface GameState {
   cards: Card[];
-  moves: number;
-  maxMoves: number;
+  flips: number;
+  score: number;
   timeLeft: number;
   isWon: boolean;
   isLost: boolean;
@@ -29,10 +29,18 @@ const ICONS: string[] = [
   "🎁", "⭐", "🔥", "💎", "🎯", "🏆", "🚀", "💰",
 ];
 
-const DIFFICULTY_CONFIG: Record<Difficulty, { pairs: number; maxMoves: number; time: number }> = {
-  easy: { pairs: 3, maxMoves: 12, time: 30 },
-  medium: { pairs: 6, maxMoves: 20, time: 45 },
-  hard: { pairs: 8, maxMoves: 24, time: 55 },
+const MATCH_POINTS: Record<Difficulty, number> = {
+  easy: 100,
+  medium: 150,
+  hard: 200,
+};
+
+const MISS_PENALTY = 10;
+
+const DIFFICULTY_CONFIG: Record<Difficulty, { pairs: number; time: number }> = {
+  easy: { pairs: 3, time: 30 },
+  medium: { pairs: 6, time: 45 },
+  hard: { pairs: 8, time: 55 },
 };
 
 const DAILY_PLAY_LIMIT = 5;
@@ -68,32 +76,6 @@ function shuffleArray<T>(arr: T[]): T[] {
   return a;
 }
 
-function shuffleUnmatchedCards(cards: Card[]): Card[] {
-  const matchedIndices: number[] = [];
-  const unmatchedCards: Card[] = [];
-  
-  cards.forEach((card, index) => {
-    if (card.isMatched) {
-      matchedIndices.push(index);
-    } else {
-      unmatchedCards.push(card);
-    }
-  });
-  
-  const shuffled = shuffleArray(unmatchedCards);
-  const result: Card[] = [];
-  let unmatchedIdx = 0;
-  
-  for (let i = 0; i < cards.length; i++) {
-    if (matchedIndices.includes(i)) {
-      result.push(cards[i]);
-    } else {
-      result.push({ ...shuffled[unmatchedIdx], id: i });
-      unmatchedIdx++;
-    }
-  }
-  return result;
-}
 
 function createCards(difficulty: Difficulty): Card[] {
   const { pairs } = DIFFICULTY_CONFIG[difficulty];
@@ -112,8 +94,8 @@ export function useMemoryGame() {
   const stored = getStoredData();
   const [state, setState] = useState<GameState>({
     cards: [],
-    moves: 0,
-    maxMoves: 12,
+    flips: 0,
+    score: 0,
     timeLeft: 30,
     isWon: false,
     isLost: false,
@@ -148,8 +130,8 @@ export function useMemoryGame() {
 
     setState({
       cards,
-      moves: 0,
-      maxMoves: config.maxMoves,
+      flips: 0,
+      score: 0,
       timeLeft: config.time,
       isWon: false,
       isLost: false,
@@ -193,7 +175,7 @@ export function useMemoryGame() {
         lockRef.current = true;
         const [first, second] = flippedRef.current;
         const isMatch = newCards[first].icon === newCards[second].icon;
-        const newMoves = prev.moves + 1;
+        const newFlips = prev.flips + 1;
 
         if (isMatch) {
           setTimeout(() => {
@@ -207,6 +189,9 @@ export function useMemoryGame() {
               const won = newMatchedPairs === p.totalPairs;
               if (won) stopTimer();
 
+              const points = MATCH_POINTS[p.difficulty];
+              const newScore = p.score + points;
+
               let reward: string | null = null;
               if (won) {
                 if (p.difficulty === "easy") reward = "🎉 You've unlocked a 10% discount code!";
@@ -216,11 +201,11 @@ export function useMemoryGame() {
 
               flippedRef.current = [];
               lockRef.current = false;
-              const shuffledCards = won ? matched : shuffleUnmatchedCards(matched);
               return {
                 ...p,
-                cards: shuffledCards,
-                moves: newMoves,
+                cards: matched,
+                flips: newFlips,
+                score: newScore,
                 matchedPairs: newMatchedPairs,
                 isWon: won,
                 reward,
@@ -235,7 +220,8 @@ export function useMemoryGame() {
                   ? { ...c, animState: "shake" as const }
                   : c
               );
-              return { ...p, cards: shaken, moves: newMoves };
+              const newScore = Math.max(0, p.score - MISS_PENALTY);
+              return { ...p, cards: shaken, flips: newFlips, score: newScore };
             });
 
             setTimeout(() => {
@@ -245,11 +231,9 @@ export function useMemoryGame() {
                     ? { ...c, isFlipped: false, animState: "idle" as const }
                     : c
                 );
-                const lost = newMoves >= p.maxMoves;
-                if (lost) stopTimer();
                 flippedRef.current = [];
                 lockRef.current = false;
-                return { ...p, cards: reset, isLost: lost };
+                return { ...p, cards: reset };
               });
             }, 400);
           }, 600);
