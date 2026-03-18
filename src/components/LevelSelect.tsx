@@ -20,7 +20,7 @@ const LevelSelect = ({ onSelect, dailyPlaysLeft }: LevelSelectProps) => {
       {/* Header */}
       <div className="text-center space-y-4">
         <div className="flex justify-center">
-          <div className="bg-primary px-5 py-2.5 rounded-2xl shadow-lg glow-primary transform -rotate-2">
+          <div className="px-5 py-2.5 rounded-2xl shadow-lg transform -rotate-2" style={{ backgroundColor: '#6ac1d5' }}>
             <img src={jumiaLogo} alt="Jumia" className="h-8 object-contain" />
           </div>
         </div>
