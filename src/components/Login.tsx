@@ -21,8 +21,8 @@ const Login: React.FC = () => {
       <div className="w-full max-w-md animate-fade-in">
         {/* Logo */}
         <div className="flex justify-center mb-8">
-          <div className="bg-primary text-primary-foreground px-5 py-2.5 rounded-2xl font-black text-3xl tracking-tighter shadow-lg glow-primary transform -rotate-2">
-            JUMIA
+          <div className="px-5 py-2.5 rounded-2xl shadow-lg transform -rotate-2" style={{ backgroundColor: '#6ac1d5' }}>
+            <img src={jumiaLogo} alt="Jumia" className="h-8 object-contain" />
           </div>
         </div>
 
