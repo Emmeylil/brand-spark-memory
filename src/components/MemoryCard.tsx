@@ -1,3 +1,5 @@
+import jumiaLogo from "@/assets/jumia-logo.png";
+
 interface MemoryCardProps {
   icon: string;
   isFlipped: boolean;
@@ -22,7 +24,7 @@ const MemoryCard = ({ icon, isFlipped, isMatched, animState, onClick }: MemoryCa
         {/* Back */}
         <div className="card-back absolute inset-0 rounded-2xl bg-gradient-to-br from-primary to-orange-500 flex items-center justify-center shadow-lg cursor-pointer border-2 border-primary/20">
           <div className="absolute inset-1.5 rounded-xl border-2 border-primary-foreground/15" />
-          <div className="text-primary-foreground font-black text-3xl opacity-30 select-none">M</div>
+          <img src={jumiaLogo} alt="Jumia" className="w-10 h-10 object-contain drop-shadow-md" />
         </div>
 
         {/* Front */}
