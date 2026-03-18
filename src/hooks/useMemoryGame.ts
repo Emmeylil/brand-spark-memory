@@ -38,9 +38,9 @@ const MATCH_POINTS: Record<Difficulty, number> = {
 const MISS_PENALTY = 10;
 
 const DIFFICULTY_CONFIG: Record<Difficulty, { pairs: number; time: number }> = {
-  easy: { pairs: 3, time: 30 },
-  medium: { pairs: 6, time: 45 },
-  hard: { pairs: 8, time: 55 },
+  easy: { pairs: 3, time: 15 },
+  medium: { pairs: 6, time: 25 },
+  hard: { pairs: 8, time: 30 },
 };
 
 const DAILY_PLAY_LIMIT = 5;
