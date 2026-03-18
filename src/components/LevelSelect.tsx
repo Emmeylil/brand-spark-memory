@@ -1,4 +1,5 @@
 import { type Difficulty } from "@/hooks/useMemoryGame";
+import jumiaLogo from "@/assets/jumia-logo.png";
 
 interface LevelSelectProps {
   onSelect: (difficulty: Difficulty) => void;
