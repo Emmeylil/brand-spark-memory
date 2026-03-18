@@ -22,7 +22,7 @@ const MemoryCard = ({ icon, isFlipped, isMatched, animState, onClick }: MemoryCa
     >
       <div className={`card-inner relative w-full h-full ${isFlipped || isMatched ? "flipped" : ""}`}>
         {/* Back */}
-        <div className="card-back absolute inset-0 rounded-2xl bg-gradient-to-br from-primary to-orange-500 flex items-center justify-center shadow-lg cursor-pointer border-2 border-primary/20">
+        <div className="card-back absolute inset-0 rounded-2xl flex items-center justify-center shadow-lg cursor-pointer border-2" style={{ background: 'linear-gradient(to bottom right, #6ac1d5, #5ab0c4)', borderColor: 'rgba(106,193,213,0.3)' }}>
           <div className="absolute inset-1.5 rounded-xl border-2 border-primary-foreground/15" />
           <img src={jumiaLogo} alt="Jumia" className="w-14 h-14 sm:w-16 sm:h-16 object-contain drop-shadow-md" />
         </div>
