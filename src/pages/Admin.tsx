@@ -84,7 +84,7 @@ export default function Admin() {
                         </div>
                         <div>
                             <h1 className="text-3xl font-black tracking-tight">Admin Dashboard</h1>
-                            <p className="text-muted-foreground font-medium">Manage Match Mania player scores</p>
+                            <p className="text-muted-foreground font-medium">Manage Memory Match player scores</p>
                         </div>
                     </div>
                     <div className="flex gap-3 w-full sm:w-auto">
