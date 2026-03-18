@@ -26,7 +26,7 @@ const LevelSelect = ({ onSelect, dailyPlaysLeft }: LevelSelectProps) => {
         </div>
         <div>
           <h1 className="text-4xl font-black tracking-tight">
-            Match<span className="text-primary">Mania</span>
+            Memory <span className="text-primary">Match</span>
           </h1>
           <p className="text-muted-foreground font-medium mt-1">Flip cards to win exclusive rewards!</p>
         </div>

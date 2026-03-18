@@ -31,7 +31,7 @@ const Login: React.FC = () => {
         <div className="glass-card rounded-3xl shadow-2xl p-8 space-y-6">
           <div className="text-center space-y-2">
             <h1 className="text-3xl font-black tracking-tight">
-              Match<span className="text-primary">Mania</span>
+              Memory <span className="text-primary">Match</span>
             </h1>
             <p className="text-muted-foreground text-sm">
               Enter your details to play & win rewards

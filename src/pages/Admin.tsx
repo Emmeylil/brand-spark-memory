@@ -65,7 +65,7 @@ export default function Admin() {
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.setAttribute("href", url);
-        link.setAttribute("download", `match_mania_players_${new Date().toISOString().split("T")[0]}.csv`);
+        link.setAttribute("download", `memory_match_players_${new Date().toISOString().split("T")[0]}.csv`);
         link.style.visibility = "hidden";
         document.body.appendChild(link);
         link.click();
