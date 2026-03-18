@@ -4,8 +4,9 @@ import { collection, query, orderBy, onSnapshot, deleteDoc, doc } from "firebase
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Users, Mail, TrendingUp, Trash2, Download, Trophy } from "lucide-react";
+import { Users, Mail, TrendingUp, Trash2, Download, Trophy, LogOut } from "lucide-react";
 import { toast } from "sonner";
+import { useFirebaseAuth } from "@/context/FirebaseAuthContext";
 
 interface PlayerRecord {
     id: string;
@@ -19,6 +20,7 @@ interface PlayerRecord {
 export default function Admin() {
     const [players, setPlayers] = useState<PlayerRecord[]>([]);
     const [loading, setLoading] = useState(true);
+    const { logout } = useFirebaseAuth();
 
     useEffect(() => {
         const q = query(collection(db, "scores"), orderBy("timestamp", "desc"));
@@ -87,7 +89,7 @@ export default function Admin() {
                             <p className="text-muted-foreground font-medium">Manage Memory Match player scores</p>
                         </div>
                     </div>
-                    <div className="flex gap-3 w-full sm:w-auto">
+                    <div className="flex gap-3 w-full sm:w-auto flex-wrap">
                         <Button
                             variant="outline"
                             className="bg-primary/5 hover:bg-primary/10 border-primary/10 font-bold h-12 rounded-xl"
@@ -95,6 +97,14 @@ export default function Admin() {
                         >
                             <Download className="w-4 h-4 mr-2" />
                             Export CSV
+                        </Button>
+                        <Button
+                            variant="outline"
+                            className="bg-destructive/5 hover:bg-destructive/10 border-destructive/10 text-destructive font-bold h-12 rounded-xl"
+                            onClick={logout}
+                        >
+                            <LogOut className="w-4 h-4 mr-2" />
+                            Logout
                         </Button>
                         <div className="bg-primary/10 p-3 px-5 rounded-xl flex items-center gap-3 border border-primary/20">
                             <Users className="text-primary w-5 h-5" />
