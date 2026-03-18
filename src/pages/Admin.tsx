@@ -65,7 +65,7 @@ export default function Admin() {
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.setAttribute("href", url);
-        link.setAttribute("download", `match_mania_players_${new Date().toISOString().split("T")[0]}.csv`);
+        link.setAttribute("download", `memory_match_players_${new Date().toISOString().split("T")[0]}.csv`);
         link.style.visibility = "hidden";
         document.body.appendChild(link);
         link.click();
@@ -84,7 +84,7 @@ export default function Admin() {
                         </div>
                         <div>
                             <h1 className="text-3xl font-black tracking-tight">Admin Dashboard</h1>
-                            <p className="text-muted-foreground font-medium">Manage Match Mania player scores</p>
+                            <p className="text-muted-foreground font-medium">Manage Memory Match player scores</p>
                         </div>
                     </div>
                     <div className="flex gap-3 w-full sm:w-auto">

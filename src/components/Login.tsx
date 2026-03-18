@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import jumiaLogo from "@/assets/jumia-logo.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,8 +22,8 @@ const Login: React.FC = () => {
       <div className="w-full max-w-md animate-fade-in">
         {/* Logo */}
         <div className="flex justify-center mb-8">
-          <div className="bg-primary text-primary-foreground px-5 py-2.5 rounded-2xl font-black text-3xl tracking-tighter shadow-lg glow-primary transform -rotate-2">
-            JUMIA
+          <div className="px-5 py-2.5 rounded-2xl shadow-lg transform -rotate-2" style={{ backgroundColor: '#6ac1d5' }}>
+            <img src={jumiaLogo} alt="Jumia" className="h-8 object-contain" />
           </div>
         </div>
 
@@ -30,7 +31,7 @@ const Login: React.FC = () => {
         <div className="glass-card rounded-3xl shadow-2xl p-8 space-y-6">
           <div className="text-center space-y-2">
             <h1 className="text-3xl font-black tracking-tight">
-              Match<span className="text-primary">Mania</span>
+              Memory <span className="text-primary">Match</span>
             </h1>
             <p className="text-muted-foreground text-sm">
               Enter your details to play & win rewards
