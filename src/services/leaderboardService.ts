@@ -14,6 +14,7 @@ export interface ScoreEntry {
     name: string;
     email: string;
     score: number;
+    timeTaken: number;
     difficulty: "easy" | "medium" | "hard";
     timestamp: Timestamp;
 }
@@ -24,13 +25,15 @@ export const submitScore = async (
     name: string,
     email: string,
     score: number,
-    difficulty: string
+    difficulty: string,
+    timeTaken: number
 ) => {
     try {
         await addDoc(collection(db, SCORES_COLLECTION), {
             name,
             email,
             score,
+            timeTaken,
             difficulty,
             timestamp: Timestamp.now(),
         });
@@ -45,7 +48,7 @@ export const subscribeToLeaderboard = (
 ) => {
     const q = query(
         collection(db, SCORES_COLLECTION),
-        orderBy("score", "desc"),
+        orderBy("timeTaken", "asc"),
         limit(maxEntries)
     );
 

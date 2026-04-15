@@ -23,12 +23,17 @@ const EndScreen = ({ isWon, reward, score, flips, difficulty, onReplay, dailyPla
   const speedBonus = isWon ? timeLeft * 50 : 0;
   const baseScore = score - speedBonus;
 
+  // Calculate time taken based on difficulty timer
+  const difficultyTimers: Record<string, number> = { easy: 15, medium: 25, hard: 30 };
+  const totalTime = difficultyTimers[difficulty] || 30;
+  const timeTaken = totalTime - timeLeft;
+
   useEffect(() => {
     if (isWon && user && !submitted) {
-      submitScore(user.name, user.email, score, difficulty);
+      submitScore(user.name, user.email, score, difficulty, timeTaken);
       setSubmitted(true);
     }
-  }, [isWon, user, score, difficulty, submitted]);
+  }, [isWon, user, score, difficulty, submitted, timeTaken]);
 
   if (showLeaderboard) {
     return (
