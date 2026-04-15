@@ -58,7 +58,7 @@ const Leaderboard: React.FC = () => {
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-xl font-black text-primary">{entry.score.toLocaleString()}</div>
+                  <div className="text-xl font-black text-primary">{entry.timeTaken}s</div>
                   <div className="text-[9px] text-muted-foreground">
                     {entry.timestamp ? new Date(entry.timestamp.seconds * 1000).toLocaleDateString() : "Just now"}
                   </div>
