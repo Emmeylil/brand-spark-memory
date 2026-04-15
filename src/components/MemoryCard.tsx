@@ -1,4 +1,23 @@
 import jumiaLogo from "@/assets/jumia-logo.png";
+import smartphoneImg from "@/assets/products/smartphone.png";
+import sneakersImg from "@/assets/products/sneakers.png";
+import watchImg from "@/assets/products/watch.png";
+import laptopImg from "@/assets/products/laptop.png";
+import headphonesImg from "@/assets/products/headphones.png";
+import backpackImg from "@/assets/products/backpack.png";
+import cameraImg from "@/assets/products/camera.png";
+import sunglassesImg from "@/assets/products/sunglasses.png";
+
+const PRODUCT_IMAGES: Record<string, string> = {
+  smartphone: smartphoneImg,
+  sneakers: sneakersImg,
+  watch: watchImg,
+  laptop: laptopImg,
+  headphones: headphonesImg,
+  backpack: backpackImg,
+  camera: cameraImg,
+  sunglasses: sunglassesImg,
+};
 
 interface MemoryCardProps {
   icon: string;
@@ -12,6 +31,8 @@ const MemoryCard = ({ icon, isFlipped, isMatched, animState, onClick }: MemoryCa
   const animClass =
     animState === "shake" ? "animate-shake" :
       animState === "match" ? "animate-match-pop" : "";
+
+  const productSrc = PRODUCT_IMAGES[icon];
 
   return (
     <button
@@ -35,7 +56,11 @@ const MemoryCard = ({ icon, isFlipped, isMatched, animState, onClick }: MemoryCa
               : "bg-card border-border"
           } ${animClass}`}
         >
-          <span className="text-4xl sm:text-5xl select-none drop-shadow-sm">{icon}</span>
+          {productSrc ? (
+            <img src={productSrc} alt={icon} className="w-3/4 h-3/4 object-contain select-none drop-shadow-sm" />
+          ) : (
+            <span className="text-4xl sm:text-5xl select-none drop-shadow-sm">{icon}</span>
+          )}
           {isMatched && (
             <div className="absolute -top-1.5 -right-1.5 bg-success text-success-foreground rounded-full p-1 shadow-md">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">

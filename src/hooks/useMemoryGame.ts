@@ -26,7 +26,7 @@ interface GameState {
 }
 
 const ICONS: string[] = [
-  "🎁", "⭐", "🔥", "💎", "🎯", "🏆", "🚀", "💰",
+  "smartphone", "sneakers", "watch", "laptop", "headphones", "backpack", "camera", "sunglasses",
 ];
 
 const MATCH_POINTS: Record<Difficulty, number> = {
