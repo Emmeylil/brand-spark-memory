@@ -89,16 +89,31 @@ function shuffleArray<T>(arr: T[]): T[] {
 function createCards(difficulty: Difficulty, gameItems: GameItem[]): Card[] {
   const { pairs } = DIFFICULTY_CONFIG[difficulty];
   
-  let doubled: { icon: string; imageUrl?: string }[] = [];
+  let selectedItems: { icon: string; imageUrl?: string }[] = [];
   
-  if (gameItems.length >= pairs) {
-    const selected = shuffleArray(gameItems).slice(0, pairs);
-    doubled = [...selected, ...selected].map(item => ({ icon: item.name, imageUrl: item.imageUrl }));
-  } else {
-    // Fallback to icons if not enough items in DB
-    const selected = shuffleArray(FALLBACK_ICONS).slice(0, pairs);
-    doubled = [...selected, ...selected].map(icon => ({ icon }));
+  // 1. Take as many as possible from the backend
+  const availableBackendItems = shuffleArray(gameItems).slice(0, pairs);
+  selectedItems = availableBackendItems.map(item => ({ 
+    icon: item.name, 
+    imageUrl: item.imageUrl 
+  }));
+
+  // 2. If we still need more pairs, fill with fallbacks
+  if (selectedItems.length < pairs) {
+    const needed = pairs - selectedItems.length;
+    // Filter out items already used (by name match) to avoid duplicates if possible
+    const availableFallbacks = FALLBACK_ICONS.filter(
+      icon => !selectedItems.some(item => item.icon === icon)
+    );
+    const extraFallbacks = shuffleArray(availableFallbacks).slice(0, needed);
+    
+    selectedItems = [
+      ...selectedItems,
+      ...extraFallbacks.map(icon => ({ icon }))
+    ];
   }
+
+  const doubled = [...selectedItems, ...selectedItems];
 
   return shuffleArray(doubled).map((item, i) => ({
     id: i,
