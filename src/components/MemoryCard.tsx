@@ -21,13 +21,14 @@ const PRODUCT_IMAGES: Record<string, string> = {
 
 interface MemoryCardProps {
   icon: string;
+  imageUrl?: string;
   isFlipped: boolean;
   isMatched: boolean;
   animState: "idle" | "shake" | "match";
   onClick: () => void;
 }
 
-const MemoryCard = ({ icon, isFlipped, isMatched, animState, onClick }: MemoryCardProps) => {
+const MemoryCard = ({ icon, imageUrl, isFlipped, isMatched, animState, onClick }: MemoryCardProps) => {
   const animClass =
     animState === "shake" ? "animate-shake" :
       animState === "match" ? "animate-match-pop" : "";
@@ -56,7 +57,9 @@ const MemoryCard = ({ icon, isFlipped, isMatched, animState, onClick }: MemoryCa
               : "bg-card border-border"
           } ${animClass}`}
         >
-          {productSrc ? (
+          {imageUrl ? (
+            <img src={imageUrl} alt={icon} className="w-3/4 h-3/4 object-contain select-none drop-shadow-sm" />
+          ) : productSrc ? (
             <img src={productSrc} alt={icon} className="w-3/4 h-3/4 object-contain select-none drop-shadow-sm" />
           ) : (
             <span className="text-4xl sm:text-5xl select-none drop-shadow-sm">{icon}</span>

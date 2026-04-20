@@ -4,6 +4,7 @@ import type { Difficulty } from "@/hooks/useMemoryGame";
 interface Card {
   id: number;
   icon: string;
+  imageUrl?: string;
   isFlipped: boolean;
   isMatched: boolean;
   animState: "idle" | "shake" | "match";
@@ -69,6 +70,7 @@ const GameBoard = ({
           <MemoryCard
             key={card.id}
             icon={card.icon}
+            imageUrl={card.imageUrl}
             isFlipped={card.isFlipped}
             isMatched={card.isMatched}
             animState={card.animState}

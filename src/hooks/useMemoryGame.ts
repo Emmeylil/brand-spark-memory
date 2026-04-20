@@ -1,10 +1,19 @@
 import { useState, useCallback, useEffect, useRef } from "react";
+import { db } from "@/lib/firebase";
+import { collection, getDocs, query, limit } from "firebase/firestore";
+
+export interface GameItem {
+  id: string;
+  name: string;
+  imageUrl: string;
+}
 
 export type Difficulty = "easy" | "medium" | "hard";
 
 interface Card {
   id: number;
   icon: string;
+  imageUrl?: string;
   isFlipped: boolean;
   isMatched: boolean;
   animState: "idle" | "shake" | "match";
@@ -25,7 +34,7 @@ interface GameState {
   reward: string | null;
 }
 
-const ICONS: string[] = [
+const FALLBACK_ICONS: string[] = [
   "smartphone", "sneakers", "watch", "laptop", "headphones", "backpack", "camera", "sunglasses",
 ];
 
@@ -77,13 +86,24 @@ function shuffleArray<T>(arr: T[]): T[] {
 }
 
 
-function createCards(difficulty: Difficulty): Card[] {
+function createCards(difficulty: Difficulty, gameItems: GameItem[]): Card[] {
   const { pairs } = DIFFICULTY_CONFIG[difficulty];
-  const selected = shuffleArray(ICONS).slice(0, pairs);
-  const doubled = [...selected, ...selected];
-  return shuffleArray(doubled).map((icon, i) => ({
+  
+  let doubled: { icon: string; imageUrl?: string }[] = [];
+  
+  if (gameItems.length >= pairs) {
+    const selected = shuffleArray(gameItems).slice(0, pairs);
+    doubled = [...selected, ...selected].map(item => ({ icon: item.name, imageUrl: item.imageUrl }));
+  } else {
+    // Fallback to icons if not enough items in DB
+    const selected = shuffleArray(FALLBACK_ICONS).slice(0, pairs);
+    doubled = [...selected, ...selected].map(icon => ({ icon }));
+  }
+
+  return shuffleArray(doubled).map((item, i) => ({
     id: i,
-    icon,
+    icon: item.icon,
+    imageUrl: item.imageUrl,
     isFlipped: false,
     isMatched: false,
     animState: "idle" as const,
@@ -118,13 +138,32 @@ export function useMemoryGame() {
     }
   }, []);
 
+  const [gameItems, setGameItems] = useState<GameItem[]>([]);
+
+  useEffect(() => {
+    const fetchGameItems = async () => {
+      try {
+        const q = query(collection(db, "game_items"), limit(10));
+        const querySnapshot = await getDocs(q);
+        const items: GameItem[] = [];
+        querySnapshot.forEach((doc) => {
+          items.push({ id: doc.id, ...doc.data() } as GameItem);
+        });
+        setGameItems(items);
+      } catch (error) {
+        console.error("Error fetching game items:", error);
+      }
+    };
+    fetchGameItems();
+  }, []);
+
   const startGame = useCallback((difficulty: Difficulty) => {
     const stored = getStoredData();
     if (stored.plays >= DAILY_PLAY_LIMIT) return;
 
     stopTimer();
     const config = DIFFICULTY_CONFIG[difficulty];
-    const cards = createCards(difficulty);
+    const cards = createCards(difficulty, gameItems);
     flippedRef.current = [];
     lockRef.current = false;
 
