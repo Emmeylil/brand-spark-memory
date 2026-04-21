@@ -86,43 +86,36 @@ function shuffleArray<T>(arr: T[]): T[] {
 }
 
 
-function createCards(difficulty: Difficulty, gameItems: GameItem[]): Card[] {
+function createCards(difficulty: Difficulty, gameItems: GameItem[]): { cards: Card[]; actualPairs: number } {
   const { pairs } = DIFFICULTY_CONFIG[difficulty];
-  
-  let selectedItems: { icon: string; imageUrl?: string }[] = [];
-  
-  // 1. Take as many as possible from the backend
-  const availableBackendItems = shuffleArray(gameItems).slice(0, pairs);
-  selectedItems = availableBackendItems.map(item => ({ 
-    icon: item.name, 
-    imageUrl: item.imageUrl 
-  }));
 
-  // 2. If we still need more pairs, fill with fallbacks
-  if (selectedItems.length < pairs) {
-    const needed = pairs - selectedItems.length;
-    // Filter out items already used (by name match) to avoid duplicates if possible
-    const availableFallbacks = FALLBACK_ICONS.filter(
-      icon => !selectedItems.some(item => item.icon === icon)
-    );
-    const extraFallbacks = shuffleArray(availableFallbacks).slice(0, needed);
-    
-    selectedItems = [
-      ...selectedItems,
-      ...extraFallbacks.map(icon => ({ icon }))
-    ];
+  let selectedItems: { icon: string; imageUrl?: string }[] = [];
+
+  if (gameItems.length > 0) {
+    // Use backend items only — cap to the number of available items, max = difficulty pairs
+    const actualPairs = Math.min(pairs, gameItems.length);
+    selectedItems = shuffleArray(gameItems).slice(0, actualPairs).map(item => ({
+      icon: item.name,
+      imageUrl: item.imageUrl,
+    }));
+  } else {
+    // No backend items at all — fall back to local icon set
+    selectedItems = shuffleArray(FALLBACK_ICONS).slice(0, pairs).map(icon => ({ icon }));
   }
 
   const doubled = [...selectedItems, ...selectedItems];
 
-  return shuffleArray(doubled).map((item, i) => ({
-    id: i,
-    icon: item.icon,
-    imageUrl: item.imageUrl,
-    isFlipped: false,
-    isMatched: false,
-    animState: "idle" as const,
-  }));
+  return {
+    cards: shuffleArray(doubled).map((item, i) => ({
+      id: i,
+      icon: item.icon,
+      imageUrl: item.imageUrl,
+      isFlipped: false,
+      isMatched: false,
+      animState: "idle" as const,
+    })),
+    actualPairs: selectedItems.length,
+  };
 }
 
 export function useMemoryGame() {
@@ -158,7 +151,7 @@ export function useMemoryGame() {
   useEffect(() => {
     const fetchGameItems = async () => {
       try {
-        const q = query(collection(db, "game_items"), limit(10));
+        const q = query(collection(db, "game_items"), limit(20));
         const querySnapshot = await getDocs(q);
         const items: GameItem[] = [];
         querySnapshot.forEach((doc) => {
@@ -178,7 +171,7 @@ export function useMemoryGame() {
 
     stopTimer();
     const config = DIFFICULTY_CONFIG[difficulty];
-    const cards = createCards(difficulty, gameItems);
+    const { cards, actualPairs } = createCards(difficulty, gameItems);
     flippedRef.current = [];
     lockRef.current = false;
 
@@ -192,7 +185,7 @@ export function useMemoryGame() {
       isStarted: true,
       difficulty,
       matchedPairs: 0,
-      totalPairs: config.pairs,
+      totalPairs: actualPairs,
       dailyPlaysLeft: DAILY_PLAY_LIMIT - stored.plays - 1,
       reward: null,
     });
