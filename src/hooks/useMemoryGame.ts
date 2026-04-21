@@ -208,7 +208,7 @@ export function useMemoryGame() {
         return { ...prev, timeLeft: prev.timeLeft - 1 };
       });
     }, 1000);
-  }, [stopTimer]);
+  }, [stopTimer, gameItems]);
 
   const flipCard = useCallback((cardId: number) => {
     if (lockRef.current) return;
