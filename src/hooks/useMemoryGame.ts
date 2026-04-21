@@ -55,22 +55,30 @@ const DIFFICULTY_CONFIG: Record<Difficulty, { pairs: number; time: number }> = {
 const DAILY_PLAY_LIMIT = 5;
 const STORAGE_KEY = "memory-game-data";
 
-function getStoredData(): { plays: number; date: string; bestScores: Partial<Record<Difficulty, number>> } {
+function getStoredData(): { playsPerDifficulty: Partial<Record<Difficulty, number>>; date: string; bestScores: Partial<Record<Difficulty, number>> } {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const data = JSON.parse(raw);
       const today = new Date().toDateString();
-      if (data.date === today) return data;
-      return { plays: 0, date: today, bestScores: data.bestScores || {} };
+      if (data.date === today) return {
+        playsPerDifficulty: data.playsPerDifficulty || {},
+        date: today,
+        bestScores: data.bestScores || {},
+      };
+      // New day — reset per-difficulty plays but keep best scores
+      return { playsPerDifficulty: {}, date: today, bestScores: data.bestScores || {} };
     }
   } catch { }
-  return { plays: 0, date: new Date().toDateString(), bestScores: {} };
+  return { playsPerDifficulty: {}, date: new Date().toDateString(), bestScores: {} };
 }
 
-function saveStoredData(plays: number, bestScores: Record<string, number>) {
+function saveStoredData(
+  playsPerDifficulty: Partial<Record<Difficulty, number>>,
+  bestScores: Partial<Record<Difficulty, number>>
+) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({
-    plays,
+    playsPerDifficulty,
     date: new Date().toDateString(),
     bestScores,
   }));
@@ -131,7 +139,7 @@ export function useMemoryGame() {
     difficulty: "easy",
     matchedPairs: 0,
     totalPairs: 3,
-    dailyPlaysLeft: DAILY_PLAY_LIMIT - stored.plays,
+    dailyPlaysLeft: DAILY_PLAY_LIMIT - (stored.playsPerDifficulty["easy"] || 0),
     reward: null,
   });
 
@@ -167,13 +175,19 @@ export function useMemoryGame() {
 
   const startGame = useCallback((difficulty: Difficulty) => {
     const stored = getStoredData();
-    if (stored.plays >= DAILY_PLAY_LIMIT) return;
+    const difficultyPlays = stored.playsPerDifficulty[difficulty] || 0;
+    if (difficultyPlays >= DAILY_PLAY_LIMIT) return;
 
     stopTimer();
     const config = DIFFICULTY_CONFIG[difficulty];
     const { cards, actualPairs } = createCards(difficulty, gameItems);
     flippedRef.current = [];
     lockRef.current = false;
+
+    const newPlaysPerDifficulty = {
+      ...stored.playsPerDifficulty,
+      [difficulty]: difficultyPlays + 1,
+    };
 
     setState({
       cards,
@@ -186,11 +200,11 @@ export function useMemoryGame() {
       difficulty,
       matchedPairs: 0,
       totalPairs: actualPairs,
-      dailyPlaysLeft: DAILY_PLAY_LIMIT - stored.plays - 1,
+      dailyPlaysLeft: DAILY_PLAY_LIMIT - (difficultyPlays + 1),
       reward: null,
     });
 
-    saveStoredData(stored.plays + 1, stored.bestScores);
+    saveStoredData(newPlaysPerDifficulty, stored.bestScores);
 
     timerRef.current = setInterval(() => {
       setState(prev => {
