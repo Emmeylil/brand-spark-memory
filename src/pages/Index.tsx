@@ -33,7 +33,6 @@ const Index = () => {
       {showEnd && (
         <EndScreen
           isWon={isWon}
-          reward={state.reward}
           score={state.score}
           flips={state.flips}
           difficulty={state.difficulty}

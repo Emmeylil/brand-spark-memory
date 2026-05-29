@@ -31,7 +31,6 @@ interface GameState {
   matchedPairs: number;
   totalPairs: number;
   dailyPlaysLeft: number;
-  reward: string | null;
 }
 
 const FALLBACK_ICONS: string[] = [
@@ -140,7 +139,6 @@ export function useMemoryGame() {
     matchedPairs: 0,
     totalPairs: 3,
     dailyPlaysLeft: DAILY_PLAY_LIMIT - (stored.playsPerDifficulty["easy"] || 0),
-    reward: null,
   });
 
   const flippedRef = useRef<number[]>([]);
@@ -201,7 +199,6 @@ export function useMemoryGame() {
       matchedPairs: 0,
       totalPairs: actualPairs,
       dailyPlaysLeft: DAILY_PLAY_LIMIT - (difficultyPlays + 1),
-      reward: null,
     });
 
     saveStoredData(newPlaysPerDifficulty, stored.bestScores);
@@ -258,13 +255,6 @@ export function useMemoryGame() {
                 newScore += timeBonus;
               }
 
-              let reward: string | null = null;
-              if (won) {
-                if (p.difficulty === "easy") reward = "🎉 You've unlocked a 10% discount code!";
-                else if (p.difficulty === "medium") reward = "🏆 You've unlocked free shipping!";
-                else reward = "💎 You've unlocked a mystery reward!";
-              }
-
               flippedRef.current = [];
               lockRef.current = false;
               return {
@@ -274,7 +264,6 @@ export function useMemoryGame() {
                 score: newScore,
                 matchedPairs: newMatchedPairs,
                 isWon: won,
-                reward,
               };
             });
           }, 500);
@@ -319,7 +308,6 @@ export function useMemoryGame() {
       isStarted: false,
       isWon: false,
       isLost: false,
-      reward: null,
     }));
   }, [stopTimer]);
 

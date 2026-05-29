@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 
 interface EndScreenProps {
   isWon: boolean;
-  reward: string | null;
   score: number;
   flips: number;
   difficulty: string;
@@ -15,7 +14,7 @@ interface EndScreenProps {
   timeLeft: number;
 }
 
-const EndScreen = ({ isWon, reward, score, flips, difficulty, onReplay, dailyPlaysLeft, timeLeft }: EndScreenProps) => {
+const EndScreen = ({ isWon, score, flips, difficulty, onReplay, dailyPlaysLeft, timeLeft }: EndScreenProps) => {
   const { user } = useAuth();
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -99,13 +98,7 @@ const EndScreen = ({ isWon, reward, score, flips, difficulty, onReplay, dailyPla
         </div>
       </div>
 
-      {/* Reward */}
-      {reward && (
-        <div className="w-full bg-primary/5 border-2 border-primary/20 border-dashed rounded-2xl p-5">
-          <p className="text-primary font-black text-lg">{reward}</p>
-          <p className="text-xs text-muted-foreground font-medium mt-1">Claim this in your Jumia account!</p>
-        </div>
-      )}
+
 
       {/* Actions */}
       <div className="flex flex-col gap-3 w-full">
