@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import jumiaLogo from "@/assets/jumia-logo.png";
 import { ShieldCheck } from "lucide-react";
+import { AnniversaryBackground } from "@/components/AnniversaryBackground";
 
 const AdminLogin: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -33,9 +33,10 @@ const AdminLogin: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen gradient-bg flex items-center justify-center p-4">
-      <div className="w-full max-w-md animate-fade-in relative">
-        <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-primary p-4 rounded-2xl shadow-xl transform -rotate-12">
+    <div className="min-h-screen gradient-bg flex items-center justify-center p-4 relative overflow-hidden">
+      <AnniversaryBackground />
+      <div className="w-full max-w-md animate-fade-in relative z-10">
+        <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-primary p-4 rounded-2xl shadow-xl transform -rotate-12 z-20">
             <ShieldCheck className="w-8 h-8 text-white" />
         </div>
 

@@ -4,6 +4,7 @@ import jumiaLogo from "@/assets/jumia-logo.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { AnniversaryBackground } from "@/components/AnniversaryBackground";
 
 const Login: React.FC = () => {
   const [name, setName] = useState("");
@@ -18,8 +19,9 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen gradient-bg flex items-center justify-center p-4">
-      <div className="w-full max-w-md animate-fade-in">
+    <div className="min-h-screen gradient-bg flex items-center justify-center p-4 relative overflow-hidden">
+      <AnniversaryBackground />
+      <div className="w-full max-w-md animate-fade-in relative z-10">
         {/* Logo */}
         <div className="flex justify-center mb-8">
           <div className="px-5 py-2.5 rounded-2xl shadow-lg transform -rotate-2" style={{ backgroundColor: '#6ac1d5' }}>
