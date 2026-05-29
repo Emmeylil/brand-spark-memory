@@ -14,21 +14,32 @@ const Leaderboard: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
-  // Filter for only medium entries
-  const mediumScores = scores.filter((entry) => entry.difficulty === "medium");
+  // Helper to parse Firestore/JS timestamps safely
+  const getSeconds = (ts: any): number => {
+    if (!ts) return 0;
+    if (typeof ts.seconds === "number") return ts.seconds;
+    if (typeof ts.toMillis === "function") return Math.floor(ts.toMillis() / 1000);
+    if (ts instanceof Date) return Math.floor(ts.getTime() / 1000);
+    if (typeof ts === "number") return Math.floor(ts / 1000);
+    const parsed = Date.parse(ts);
+    if (!isNaN(parsed)) return Math.floor(parsed / 1000);
+    return 0;
+  };
 
   // Sort: Day descending, then score descending, then timeTaken ascending
-  const sortedScores = [...mediumScores].sort((a, b) => {
-    const timeA = a.timestamp ? a.timestamp.seconds : 0;
-    const timeB = b.timestamp ? b.timestamp.seconds : 0;
+  const sortedScores = [...scores].sort((a, b) => {
+    const timeA = getSeconds(a.timestamp);
+    const timeB = getSeconds(b.timestamp);
     
     const dateA = new Date(timeA * 1000).toDateString();
     const dateB = new Date(timeB * 1000).toDateString();
     
     if (dateA !== dateB) {
-      const startOfDayA = new Date(timeA * 1000).setHours(0, 0, 0, 0);
-      const startOfDayB = new Date(timeB * 1000).setHours(0, 0, 0, 0);
-      return startOfDayB - startOfDayA; // Date descending
+      const startOfDayA = new Date(timeA * 1000);
+      startOfDayA.setHours(0, 0, 0, 0);
+      const startOfDayB = new Date(timeB * 1000);
+      startOfDayB.setHours(0, 0, 0, 0);
+      return startOfDayB.getTime() - startOfDayA.getTime(); // Date descending
     }
     
     if (b.score !== a.score) {
@@ -46,7 +57,8 @@ const Leaderboard: React.FC = () => {
 
   const groups: DayGroup[] = [];
   sortedScores.forEach((entry) => {
-    const date = entry.timestamp ? new Date(entry.timestamp.seconds * 1000) : new Date();
+    const time = getSeconds(entry.timestamp);
+    const date = time ? new Date(time * 1000) : new Date();
     const today = new Date();
     const yesterday = new Date();
     yesterday.setDate(today.getDate() - 1);
@@ -74,7 +86,7 @@ const Leaderboard: React.FC = () => {
       <div className="text-center p-6 pb-4">
         <Trophy className="w-10 h-10 text-primary mx-auto mb-2" />
         <h2 className="text-2xl font-black tracking-tight">Leaderboard</h2>
-        <p className="text-sm text-muted-foreground font-semibold">Daily rankings (Medium Mode)</p>
+        <p className="text-sm text-muted-foreground font-semibold">Daily rankings</p>
       </div>
 
       {/* Content */}
@@ -115,7 +127,7 @@ const Leaderboard: React.FC = () => {
                             )}
                           </div>
                           <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">
-                            Completed in {entry.timeTaken}s
+                            Completed in {entry.timeTaken}s {entry.difficulty !== 'medium' && `(${entry.difficulty})`}
                           </div>
                         </div>
                       </div>
