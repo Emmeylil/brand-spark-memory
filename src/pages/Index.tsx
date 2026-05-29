@@ -5,6 +5,7 @@ import { useMemoryGame } from "@/hooks/useMemoryGame";
 import { Link } from "react-router-dom";
 import { Confetti } from "@/components/Confetti";
 import { AnniversaryBackground } from "@/components/AnniversaryBackground";
+import Leaderboard from "@/components/Leaderboard";
 
 const Index = () => {
   const { state, startGame, flipCard, resetGame } = useMemoryGame();
@@ -17,9 +18,12 @@ const Index = () => {
       <AnniversaryBackground />
       <Confetti />
 
-      <div className="relative z-10 w-full flex flex-col items-center justify-center">
+      <div className="relative z-10 w-full flex flex-col items-center justify-center gap-8 py-4">
         {!isStarted && !showEnd && (
-          <LevelSelect onSelect={startGame} dailyPlaysLeft={state.dailyPlaysLeft} />
+          <div className="w-full max-w-sm flex flex-col items-center gap-8 px-4 animate-fade-in">
+            <LevelSelect onSelect={startGame} dailyPlaysLeft={state.dailyPlaysLeft} />
+            <Leaderboard />
+          </div>
         )}
 
         {isStarted && !showEnd && (
