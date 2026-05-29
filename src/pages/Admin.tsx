@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Mail, TrendingUp, Trash2, Download, Trophy, LogOut, Image as ImageIcon, Plus, LayoutGrid } from "lucide-react";
+import { Users, Mail, TrendingUp, Trash2, Download, Trophy, LogOut, Image as ImageIcon, Plus, LayoutGrid, Calendar, SlidersHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { useFirebaseAuth } from "@/context/FirebaseAuthContext";
 
@@ -33,6 +33,32 @@ export default function Admin() {
     const [addingCard, setAddingCard] = useState(false);
     const [newCard, setNewCard] = useState({ name: "", imageUrl: "" });
     const { logout } = useFirebaseAuth();
+
+    const [scoreMin, setScoreMin] = useState<string>("");
+    const [scoreMax, setScoreMax] = useState<string>("");
+    const [dateStart, setDateStart] = useState<string>("");
+    const [dateEnd, setDateEnd] = useState<string>("");
+
+    const filteredPlayers = players.filter((player) => {
+        if (scoreMin !== "") {
+            const min = parseInt(scoreMin, 10);
+            if (!isNaN(min) && player.score < min) return false;
+        }
+        if (scoreMax !== "") {
+            const max = parseInt(scoreMax, 10);
+            if (!isNaN(max) && player.score > max) return false;
+        }
+        if (player.timestamp) {
+            const playDate = new Date(player.timestamp.seconds * 1000);
+            const playDateString = playDate.toISOString().split("T")[0];
+            
+            if (dateStart !== "" && playDateString < dateStart) return false;
+            if (dateEnd !== "" && playDateString > dateEnd) return false;
+        } else {
+            if (dateStart !== "" || dateEnd !== "") return false;
+        }
+        return true;
+    });
 
     useEffect(() => {
         // Subscribe to scores
@@ -108,15 +134,16 @@ export default function Admin() {
     };
 
     const handleExportCSV = () => {
-        if (players.length === 0) {
-            toast.error("No player data to export.");
+        const dataToExport = filteredPlayers;
+        if (dataToExport.length === 0) {
+            toast.error("No player data matching filters to export.");
             return;
         }
 
         const headers = ["Name", "Email", "Score", "Difficulty", "Date"];
         const csvRows = [
             headers.join(","),
-            ...players.map(p => {
+            ...dataToExport.map(p => {
                 const date = p.timestamp ? new Date(p.timestamp.seconds * 1000).toISOString() : "N/A";
                 return `${p.name},${p.email},${p.score},${p.difficulty},${date}`;
             })
@@ -170,7 +197,9 @@ export default function Admin() {
                             <Users className="text-primary w-5 h-5" />
                             <div>
                                 <p className="text-[10px] text-primary font-black uppercase tracking-widest">Total Entries</p>
-                                <p className="font-black text-xl leading-none">{players.length}</p>
+                                <p className="font-black text-xl leading-none">
+                                    {filteredPlayers.length !== players.length ? `${filteredPlayers.length} / ${players.length}` : players.length}
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -197,6 +226,73 @@ export default function Admin() {
                                 </div>
                                 <CardDescription className="font-medium">All recorded game sessions across all difficulties</CardDescription>
                             </CardHeader>
+                            
+                            {/* Filter Section */}
+                            <div className="bg-white/30 border-b border-border p-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 items-end">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                                        <Trophy className="w-3 h-3 text-primary" /> Min Score
+                                    </label>
+                                    <Input
+                                        type="number"
+                                        placeholder="Min score"
+                                        value={scoreMin}
+                                        onChange={(e) => setScoreMin(e.target.value)}
+                                        className="bg-white/50 border-primary/10 rounded-xl h-11 focus-visible:ring-primary"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                                        <Trophy className="w-3 h-3 text-primary" /> Max Score
+                                    </label>
+                                    <Input
+                                        type="number"
+                                        placeholder="Max score"
+                                        value={scoreMax}
+                                        onChange={(e) => setScoreMax(e.target.value)}
+                                        className="bg-white/50 border-primary/10 rounded-xl h-11 focus-visible:ring-primary"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                                        <Calendar className="w-3 h-3 text-primary" /> Start Date
+                                    </label>
+                                    <Input
+                                        type="date"
+                                        value={dateStart}
+                                        onChange={(e) => setDateStart(e.target.value)}
+                                        className="bg-white/50 border-primary/10 rounded-xl h-11 focus-visible:ring-primary font-medium"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                                        <Calendar className="w-3 h-3 text-primary" /> End Date
+                                    </label>
+                                    <Input
+                                        type="date"
+                                        value={dateEnd}
+                                        onChange={(e) => setDateEnd(e.target.value)}
+                                        className="bg-white/50 border-primary/10 rounded-xl h-11 focus-visible:ring-primary font-medium"
+                                    />
+                                </div>
+                                <div>
+                                    <Button
+                                        variant="outline"
+                                        disabled={!scoreMin && !scoreMax && !dateStart && !dateEnd}
+                                        onClick={() => {
+                                            setScoreMin("");
+                                            setScoreMax("");
+                                            setDateStart("");
+                                            setDateEnd("");
+                                        }}
+                                        className="w-full h-11 rounded-xl font-bold border-primary/10 bg-primary/5 hover:bg-primary/10 text-primary transition-all disabled:opacity-50"
+                                    >
+                                        <SlidersHorizontal className="w-4 h-4 mr-2" />
+                                        Reset
+                                    </Button>
+                                </div>
+                            </div>
+
                             <CardContent className="p-0">
                                 <div className="overflow-x-auto">
                                     <Table>
@@ -217,7 +313,7 @@ export default function Admin() {
                                                         <div className="animate-spin rounded-full h-10 w-10 border-2 border-primary border-t-transparent mx-auto" />
                                                     </TableCell>
                                                 </TableRow>
-                                            ) : players.map((player) => (
+                                            ) : filteredPlayers.map((player) => (
                                                 <TableRow key={player.id} className="hover:bg-primary/[0.02] transition-colors border-b border-muted/50 last:border-0">
                                                     <TableCell className="font-bold px-6 py-4">{player.name}</TableCell>
                                                     <TableCell className="px-6 py-4">
@@ -256,6 +352,13 @@ export default function Admin() {
                                                 <TableRow>
                                                     <TableCell colSpan={6} className="text-center p-12 text-muted-foreground italic">
                                                         No scores recorded yet.
+                                                    </TableCell>
+                                                </TableRow>
+                                            )}
+                                            {!loading && players.length > 0 && filteredPlayers.length === 0 && (
+                                                <TableRow>
+                                                    <TableCell colSpan={6} className="text-center p-12 text-muted-foreground italic">
+                                                        No scores matching the current filters.
                                                     </TableCell>
                                                 </TableRow>
                                             )}
