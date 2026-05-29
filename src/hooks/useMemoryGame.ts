@@ -131,14 +131,14 @@ export function useMemoryGame() {
     cards: [],
     flips: 0,
     score: 0,
-    timeLeft: 30,
+    timeLeft: 25,
     isWon: false,
     isLost: false,
     isStarted: false,
-    difficulty: "easy",
+    difficulty: "medium",
     matchedPairs: 0,
-    totalPairs: 3,
-    dailyPlaysLeft: DAILY_PLAY_LIMIT - (stored.playsPerDifficulty["easy"] || 0),
+    totalPairs: 6,
+    dailyPlaysLeft: DAILY_PLAY_LIMIT - (stored.playsPerDifficulty["medium"] || 0),
   });
 
   const flippedRef = useRef<number[]>([]);
@@ -171,7 +171,7 @@ export function useMemoryGame() {
     fetchGameItems();
   }, []);
 
-  const startGame = useCallback((difficulty: Difficulty) => {
+  const startGame = useCallback((difficulty: Difficulty = "medium") => {
     const stored = getStoredData();
     const difficultyPlays = stored.playsPerDifficulty[difficulty] || 0;
     if (difficultyPlays >= DAILY_PLAY_LIMIT) return;

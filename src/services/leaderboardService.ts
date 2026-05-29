@@ -44,11 +44,11 @@ export const submitScore = async (
 
 export const subscribeToLeaderboard = (
     callback: (scores: ScoreEntry[]) => void,
-    maxEntries: number = 10
+    maxEntries: number = 100
 ) => {
     const q = query(
         collection(db, SCORES_COLLECTION),
-        orderBy("timeTaken", "asc"),
+        orderBy("timestamp", "desc"),
         limit(maxEntries)
     );
 

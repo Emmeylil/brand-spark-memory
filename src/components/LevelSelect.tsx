@@ -6,12 +6,6 @@ interface LevelSelectProps {
   dailyPlaysLeft: number;
 }
 
-const levels: { key: Difficulty; label: string; desc: string; cards: number; emoji: string; color: string }[] = [
-  { key: "easy", label: "Easy", desc: "3×2 Grid", cards: 6, emoji: "🎁", color: "from-green-400 to-emerald-500" },
-  { key: "medium", label: "Medium", desc: "4×3 Grid", cards: 12, emoji: "🚀", color: "from-primary to-orange-500" },
-  { key: "hard", label: "Hard", desc: "4×4 Grid", cards: 16, emoji: "💎", color: "from-red-400 to-rose-500" },
-];
-
 const LevelSelect = ({ onSelect, dailyPlaysLeft }: LevelSelectProps) => {
   const noPlays = dailyPlaysLeft <= 0;
 
@@ -43,25 +37,17 @@ const LevelSelect = ({ onSelect, dailyPlaysLeft }: LevelSelectProps) => {
       ) : (
         <>
           <div className="flex flex-col gap-3 w-full">
-            {levels.map((level) => (
-              <button
-                key={level.key}
-                onClick={() => onSelect(level.key)}
-                className="group relative glass-card hover:bg-card rounded-2xl p-5 text-left transition-all active:scale-[0.97] shadow-sm hover:shadow-xl border border-border hover:border-primary/30"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <h3 className="font-black text-xl group-hover:text-primary transition-colors">
-                      {level.label}
-                    </h3>
-                    <p className="text-sm text-muted-foreground font-semibold">{level.desc} · {level.cards} Cards</p>
-                  </div>
-                  <div className={`bg-gradient-to-br ${level.color} p-3.5 rounded-2xl shadow-md transform group-hover:scale-110 group-hover:rotate-6 transition-all`}>
-                    <span className="text-2xl">{level.emoji}</span>
-                  </div>
-                </div>
-              </button>
-            ))}
+            <button
+              onClick={() => onSelect("medium")}
+              className="group relative bg-primary hover:bg-primary/95 text-white rounded-2xl p-6 text-center transition-all active:scale-[0.97] shadow-lg hover:shadow-xl glow-primary"
+            >
+              <span className="font-black text-2xl tracking-wide flex items-center justify-center gap-2">
+                🚀 Start Game
+              </span>
+              <p className="text-xs text-white/80 font-bold uppercase tracking-wider mt-1.5">
+                4×3 Grid • 12 Cards • 25s Limit
+              </p>
+            </button>
           </div>
 
           <div className="glass-card px-6 py-2.5 rounded-full shadow-sm">

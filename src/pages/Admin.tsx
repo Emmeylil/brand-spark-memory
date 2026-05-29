@@ -22,6 +22,7 @@ interface PlayerRecord {
     name: string;
     email: string;
     score: number;
+    timeTaken: number;
     difficulty: string;
     timestamp: any;
 }
@@ -58,6 +59,26 @@ export default function Admin() {
             if (dateStart !== "" || dateEnd !== "") return false;
         }
         return true;
+    });
+
+    const sortedFilteredPlayers = [...filteredPlayers].sort((a, b) => {
+        const timeA = a.timestamp ? a.timestamp.seconds : 0;
+        const timeB = b.timestamp ? b.timestamp.seconds : 0;
+        
+        const dateA = new Date(timeA * 1000).toDateString();
+        const dateB = new Date(timeB * 1000).toDateString();
+        
+        if (dateA !== dateB) {
+            const startOfDayA = new Date(timeA * 1000).setHours(0, 0, 0, 0);
+            const startOfDayB = new Date(timeB * 1000).setHours(0, 0, 0, 0);
+            return startOfDayB - startOfDayA; // Date descending
+        }
+        
+        if (b.score !== a.score) {
+            return b.score - a.score; // Score descending
+        }
+        
+        return a.timeTaken - b.timeTaken; // Time taken ascending
     });
 
     useEffect(() => {
@@ -134,18 +155,18 @@ export default function Admin() {
     };
 
     const handleExportCSV = () => {
-        const dataToExport = filteredPlayers;
+        const dataToExport = sortedFilteredPlayers;
         if (dataToExport.length === 0) {
             toast.error("No player data matching filters to export.");
             return;
         }
 
-        const headers = ["Name", "Email", "Score", "Difficulty", "Date"];
+        const headers = ["Name", "Email", "Score", "Time (s)", "Difficulty", "Date"];
         const csvRows = [
             headers.join(","),
             ...dataToExport.map(p => {
                 const date = p.timestamp ? new Date(p.timestamp.seconds * 1000).toISOString() : "N/A";
-                return `${p.name},${p.email},${p.score},${p.difficulty},${date}`;
+                return `${p.name},${p.email},${p.score},${p.timeTaken || 0},${p.difficulty},${date}`;
             })
         ];
 
@@ -198,7 +219,7 @@ export default function Admin() {
                             <div>
                                 <p className="text-[10px] text-primary font-black uppercase tracking-widest">Total Entries</p>
                                 <p className="font-black text-xl leading-none">
-                                    {filteredPlayers.length !== players.length ? `${filteredPlayers.length} / ${players.length}` : players.length}
+                                    {sortedFilteredPlayers.length !== players.length ? `${sortedFilteredPlayers.length} / ${players.length}` : players.length}
                                 </p>
                             </div>
                         </div>
@@ -301,6 +322,7 @@ export default function Admin() {
                                                 <TableHead className="font-black uppercase text-[10px] tracking-widest px-6">Player</TableHead>
                                                 <TableHead className="font-black uppercase text-[10px] tracking-widest px-6">Contact</TableHead>
                                                 <TableHead className="font-black uppercase text-[10px] tracking-widest px-6">Mode</TableHead>
+                                                <TableHead className="font-black uppercase text-[10px] tracking-widest px-6 text-right">Time</TableHead>
                                                 <TableHead className="font-black uppercase text-[10px] tracking-widest px-6 text-right">Score</TableHead>
                                                 <TableHead className="font-black uppercase text-[10px] tracking-widest px-6 text-right">Date</TableHead>
                                                 <TableHead className="font-black uppercase text-[10px] tracking-widest px-6 text-center">Action</TableHead>
@@ -309,11 +331,11 @@ export default function Admin() {
                                         <TableBody>
                                             {loading ? (
                                                 <TableRow>
-                                                    <TableCell colSpan={6} className="text-center p-12">
+                                                    <TableCell colSpan={7} className="text-center p-12">
                                                         <div className="animate-spin rounded-full h-10 w-10 border-2 border-primary border-t-transparent mx-auto" />
                                                     </TableCell>
                                                 </TableRow>
-                                            ) : filteredPlayers.map((player) => (
+                                            ) : sortedFilteredPlayers.map((player) => (
                                                 <TableRow key={player.id} className="hover:bg-primary/[0.02] transition-colors border-b border-muted/50 last:border-0">
                                                     <TableCell className="font-bold px-6 py-4">{player.name}</TableCell>
                                                     <TableCell className="px-6 py-4">
@@ -329,6 +351,9 @@ export default function Admin() {
                                                             }`}>
                                                             {player.difficulty}
                                                         </span>
+                                                    </TableCell>
+                                                    <TableCell className="text-right font-bold text-muted-foreground px-6 py-4">
+                                                        {player.timeTaken ? `${player.timeTaken}s` : '0s'}
                                                     </TableCell>
                                                     <TableCell className="text-right font-black text-primary text-lg px-6 py-4">
                                                         {player.score.toLocaleString()}
@@ -350,14 +375,14 @@ export default function Admin() {
                                             ))}
                                             {!loading && players.length === 0 && (
                                                 <TableRow>
-                                                    <TableCell colSpan={6} className="text-center p-12 text-muted-foreground italic">
+                                                    <TableCell colSpan={7} className="text-center p-12 text-muted-foreground italic">
                                                         No scores recorded yet.
                                                     </TableCell>
                                                 </TableRow>
                                             )}
                                             {!loading && players.length > 0 && filteredPlayers.length === 0 && (
                                                 <TableRow>
-                                                    <TableCell colSpan={6} className="text-center p-12 text-muted-foreground italic">
+                                                    <TableCell colSpan={7} className="text-center p-12 text-muted-foreground italic">
                                                         No scores matching the current filters.
                                                     </TableCell>
                                                 </TableRow>

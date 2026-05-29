@@ -81,11 +81,6 @@ const EndScreen = ({ isWon, score, flips, difficulty, onReplay, dailyPlaysLeft, 
             <p className="text-xl font-black">{flips}</p>
             <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Flips</p>
           </div>
-          <div className="w-px bg-border" />
-          <div>
-            <p className="text-xl font-black capitalize">{difficulty}</p>
-            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Mode</p>
-          </div>
           {isWon && (
             <>
               <div className="w-px bg-border" />
