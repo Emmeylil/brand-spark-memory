@@ -161,12 +161,12 @@ export default function Admin() {
             return;
         }
 
-        const headers = ["Name", "Email", "Score", "Time (s)", "Difficulty", "Date"];
+        const headers = ["Name", "Email", "Score", "Time (s)", "Date"];
         const csvRows = [
             headers.join(","),
             ...dataToExport.map(p => {
                 const date = p.timestamp ? new Date(p.timestamp.seconds * 1000).toISOString() : "N/A";
-                return `${p.name},${p.email},${p.score},${p.timeTaken || 0},${p.difficulty},${date}`;
+                return `${p.name},${p.email},${p.score},${p.timeTaken || 0},${date}`;
             })
         ];
 
@@ -321,7 +321,6 @@ export default function Admin() {
                                             <TableRow>
                                                 <TableHead className="font-black uppercase text-[10px] tracking-widest px-6">Player</TableHead>
                                                 <TableHead className="font-black uppercase text-[10px] tracking-widest px-6">Contact</TableHead>
-                                                <TableHead className="font-black uppercase text-[10px] tracking-widest px-6">Mode</TableHead>
                                                 <TableHead className="font-black uppercase text-[10px] tracking-widest px-6 text-right">Time</TableHead>
                                                 <TableHead className="font-black uppercase text-[10px] tracking-widest px-6 text-right">Score</TableHead>
                                                 <TableHead className="font-black uppercase text-[10px] tracking-widest px-6 text-right">Date</TableHead>
@@ -331,7 +330,7 @@ export default function Admin() {
                                         <TableBody>
                                             {loading ? (
                                                 <TableRow>
-                                                    <TableCell colSpan={7} className="text-center p-12">
+                                                    <TableCell colSpan={6} className="text-center p-12">
                                                         <div className="animate-spin rounded-full h-10 w-10 border-2 border-primary border-t-transparent mx-auto" />
                                                     </TableCell>
                                                 </TableRow>
@@ -343,14 +342,6 @@ export default function Admin() {
                                                             <Mail className="w-3.5 h-3.5" />
                                                             {player.email}
                                                         </div>
-                                                    </TableCell>
-                                                    <TableCell className="px-6 py-4">
-                                                        <span className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${player.difficulty === 'hard' ? 'bg-red-100 text-red-600' :
-                                                            player.difficulty === 'medium' ? 'bg-orange-100 text-orange-600' :
-                                                                'bg-green-100 text-green-600'
-                                                            }`}>
-                                                            {player.difficulty}
-                                                        </span>
                                                     </TableCell>
                                                     <TableCell className="text-right font-bold text-muted-foreground px-6 py-4">
                                                         {player.timeTaken ? `${player.timeTaken}s` : '0s'}
@@ -375,14 +366,14 @@ export default function Admin() {
                                             ))}
                                             {!loading && players.length === 0 && (
                                                 <TableRow>
-                                                    <TableCell colSpan={7} className="text-center p-12 text-muted-foreground italic">
+                                                    <TableCell colSpan={6} className="text-center p-12 text-muted-foreground italic">
                                                         No scores recorded yet.
                                                     </TableCell>
                                                 </TableRow>
                                             )}
                                             {!loading && players.length > 0 && filteredPlayers.length === 0 && (
                                                 <TableRow>
-                                                    <TableCell colSpan={7} className="text-center p-12 text-muted-foreground italic">
+                                                    <TableCell colSpan={6} className="text-center p-12 text-muted-foreground italic">
                                                         No scores matching the current filters.
                                                     </TableCell>
                                                 </TableRow>

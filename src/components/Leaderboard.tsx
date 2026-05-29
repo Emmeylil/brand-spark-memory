@@ -127,7 +127,7 @@ const Leaderboard: React.FC = () => {
                             )}
                           </div>
                           <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">
-                            Completed in {entry.timeTaken}s {entry.difficulty !== 'medium' && `(${entry.difficulty})`}
+                            Completed in {entry.timeTaken}s
                           </div>
                         </div>
                       </div>

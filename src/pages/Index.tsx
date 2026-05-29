@@ -3,6 +3,7 @@ import GameBoard from "@/components/GameBoard";
 import EndScreen from "@/components/EndScreen";
 import { useMemoryGame } from "@/hooks/useMemoryGame";
 import { Link } from "react-router-dom";
+import { Confetti } from "@/components/Confetti";
 
 const Index = () => {
   const { state, startGame, flipCard, resetGame } = useMemoryGame();
@@ -12,6 +13,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen gradient-bg flex flex-col items-center justify-center py-8 relative">
+      <Confetti />
       {!isStarted && !showEnd && (
         <LevelSelect onSelect={startGame} dailyPlaysLeft={state.dailyPlaysLeft} />
       )}
