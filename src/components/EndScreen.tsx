@@ -28,11 +28,11 @@ const EndScreen = ({ isWon, score, flips, difficulty, onReplay, dailyPlaysLeft, 
   const timeTaken = totalTime - timeLeft;
 
   useEffect(() => {
-    if (isWon && user && !submitted) {
+    if (user && !submitted) {
       submitScore(user.name, user.email, score, difficulty, timeTaken);
       setSubmitted(true);
     }
-  }, [isWon, user, score, difficulty, submitted, timeTaken]);
+  }, [user, score, difficulty, submitted, timeTaken]);
 
   if (showLeaderboard) {
     return (
