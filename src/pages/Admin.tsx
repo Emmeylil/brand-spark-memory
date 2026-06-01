@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { db } from "@/lib/firebase";
-import { collection, query, orderBy, onSnapshot, deleteDoc, doc, addDoc, Timestamp } from "firebase/firestore";
+import { collection, query, orderBy, onSnapshot, deleteDoc, doc, addDoc, Timestamp, setDoc } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, Mail, TrendingUp, Trash2, Download, Trophy, LogOut, Image as ImageIcon, Plus, LayoutGrid, Calendar, SlidersHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { useFirebaseAuth } from "@/context/FirebaseAuthContext";
+import { Switch } from "@/components/ui/switch";
 
 interface GameItem {
     id: string;
@@ -34,6 +35,13 @@ export default function Admin() {
     const [addingCard, setAddingCard] = useState(false);
     const [newCard, setNewCard] = useState({ name: "", imageUrl: "" });
     const { logout } = useFirebaseAuth();
+
+    const [config, setConfig] = useState({
+        startTime: "08:00",
+        endTime: "23:59",
+        weekdaysOnly: true,
+    });
+    const [savingConfig, setSavingConfig] = useState(false);
 
     const [scoreMin, setScoreMin] = useState<string>("");
     const [scoreMax, setScoreMax] = useState<string>("");
@@ -103,9 +111,23 @@ export default function Admin() {
             setGameItems(items);
         });
 
+        // Subscribe to game configuration settings
+        const configDocRef = doc(db, "game_config", "settings");
+        const unsubConfig = onSnapshot(configDocRef, (docSnap) => {
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                setConfig({
+                    startTime: data.startTime || "08:00",
+                    endTime: data.endTime || "23:59",
+                    weekdaysOnly: data.weekdaysOnly !== undefined ? data.weekdaysOnly : true,
+                });
+            }
+        });
+
         return () => {
             unsubScores();
             unsubItems();
+            unsubConfig();
         };
     }, []);
 
@@ -151,6 +173,20 @@ export default function Admin() {
         } catch (error) {
             console.error("Error deleting card:", error);
             toast.error("Failed to delete card.");
+        }
+    };
+
+    const handleSaveConfig = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSavingConfig(true);
+        try {
+            await setDoc(doc(db, "game_config", "settings"), config);
+            toast.success("Game availability settings saved successfully!");
+        } catch (error) {
+            console.error("Error saving game config:", error);
+            toast.error("Failed to save game settings.");
+        } finally {
+            setSavingConfig(false);
         }
     };
 
@@ -227,7 +263,7 @@ export default function Admin() {
                 </header>
 
                 <Tabs defaultValue="leaderboard" className="w-full space-y-6">
-                    <TabsList className="bg-white/50 p-1 rounded-2xl border border-white/50 backdrop-blur-md self-start">
+                    <TabsList className="bg-white/50 p-1 rounded-2xl border border-white/50 backdrop-blur-md self-start flex-wrap gap-1">
                         <TabsTrigger value="leaderboard" className="rounded-xl px-6 py-2.5 font-bold data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
                             <Trophy className="w-4 h-4 mr-2" />
                             Leaderboard
@@ -235,6 +271,10 @@ export default function Admin() {
                         <TabsTrigger value="cards" className="rounded-xl px-6 py-2.5 font-bold data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
                             <ImageIcon className="w-4 h-4 mr-2" />
                             Game Cards
+                        </TabsTrigger>
+                        <TabsTrigger value="config" className="rounded-xl px-6 py-2.5 font-bold data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
+                            <SlidersHorizontal className="w-4 h-4 mr-2" />
+                            Game Settings
                         </TabsTrigger>
                     </TabsList>
 
@@ -463,6 +503,90 @@ export default function Admin() {
                                 </div>
                             )}
                         </div>
+                    </TabsContent>
+
+                    <TabsContent value="config" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <Card className="glass-card rounded-3xl shadow-xl border-none overflow-hidden max-w-2xl">
+                            <CardHeader className="bg-white/50 border-b border-border p-6">
+                                <div className="flex items-center gap-2">
+                                    <SlidersHorizontal className="text-primary w-5 h-5" />
+                                    <CardTitle className="text-xl font-black">Game Availability Settings</CardTitle>
+                                </div>
+                                <CardDescription className="font-medium">
+                                    Control when the game is open and active for players.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="p-6">
+                                <form onSubmit={handleSaveConfig} className="space-y-6">
+                                    {/* Weekdays Only Toggle */}
+                                    <div className="flex items-center justify-between p-4 bg-white/40 border border-primary/5 rounded-2xl">
+                                        <div className="space-y-1 pr-4">
+                                            <label className="text-sm font-black uppercase tracking-wider text-foreground block cursor-pointer" htmlFor="weekdays-only">
+                                                📅 Weekdays Only
+                                            </label>
+                                            <p className="text-xs text-muted-foreground font-medium">
+                                                When enabled, the game will only be available to play Monday through Friday.
+                                            </p>
+                                        </div>
+                                        <Switch 
+                                            id="weekdays-only"
+                                            checked={config.weekdaysOnly}
+                                            onCheckedChange={(checked) => setConfig({ ...config, weekdaysOnly: checked })}
+                                        />
+                                    </div>
+
+                                    {/* Time Range Selectors */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                                                ⏰ Start Time
+                                            </label>
+                                            <Input 
+                                                type="time" 
+                                                value={config.startTime}
+                                                onChange={(e) => setConfig({ ...config, startTime: e.target.value })}
+                                                className="bg-white/50 border-primary/10 rounded-xl h-12 focus-visible:ring-primary font-bold"
+                                                required
+                                            />
+                                            <p className="text-[10px] text-muted-foreground font-medium pl-1">
+                                                Time the game opens (default: 08:00 AM)
+                                            </p>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                                                ⏰ End Time
+                                            </label>
+                                            <Input 
+                                                type="time" 
+                                                value={config.endTime}
+                                                onChange={(e) => setConfig({ ...config, endTime: e.target.value })}
+                                                className="bg-white/50 border-primary/10 rounded-xl h-12 focus-visible:ring-primary font-bold"
+                                                required
+                                            />
+                                            <p className="text-[10px] text-muted-foreground font-medium pl-1">
+                                                Time the game closes (default: 11:59 PM)
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Save Button */}
+                                    <div className="flex justify-end pt-4 border-t border-muted">
+                                        <Button 
+                                            type="submit" 
+                                            disabled={savingConfig}
+                                            className="bg-primary hover:bg-primary/90 text-white font-black px-8 h-12 rounded-xl shadow-lg glow-primary min-w-[150px]"
+                                        >
+                                            {savingConfig ? (
+                                                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white" />
+                                            ) : (
+                                                "Save Settings"
+                                            )}
+                                        </Button>
+                                    </div>
+                                </form>
+                            </CardContent>
+                        </Card>
                     </TabsContent>
                 </Tabs>
             </div>

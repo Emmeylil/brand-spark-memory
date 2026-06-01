@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { db } from "@/lib/firebase";
-import { collection, getDocs, query, limit } from "firebase/firestore";
+import { collection, getDocs, query, limit, doc, onSnapshot } from "firebase/firestore";
 
 export interface GameItem {
   id: string;
@@ -125,8 +125,39 @@ function createCards(difficulty: Difficulty, gameItems: GameItem[]): { cards: Ca
   };
 }
 
+export function isGameAvailable(config: { startTime: string; endTime: string; weekdaysOnly: boolean }) {
+  const now = new Date();
+  const day = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  
+  if (config.weekdaysOnly && (day === 0 || day === 6)) {
+    return false;
+  }
+  
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  
+  const [startH, startM] = config.startTime.split(":").map(Number);
+  const startMinutes = startH * 60 + startM;
+  
+  const [endH, endM] = config.endTime.split(":").map(Number);
+  const endMinutes = endH * 60 + endM;
+  
+  return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
+}
+
 export function useMemoryGame() {
   const stored = getStoredData();
+  const [config, setConfig] = useState<{ startTime: string; endTime: string; weekdaysOnly: boolean }>({
+    startTime: "08:00",
+    endTime: "23:59",
+    weekdaysOnly: true,
+  });
+  const [isAvailable, setIsAvailable] = useState(() => {
+    return isGameAvailable({
+      startTime: "08:00",
+      endTime: "23:59",
+      weekdaysOnly: true,
+    });
+  });
   const [state, setState] = useState<GameState>({
     cards: [],
     flips: 0,
@@ -169,9 +200,42 @@ export function useMemoryGame() {
       }
     };
     fetchGameItems();
+
+    // Subscribe to game availability settings
+    const configDocRef = doc(db, "game_config", "settings");
+    const unsubConfig = onSnapshot(configDocRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setConfig({
+          startTime: data.startTime || "08:00",
+          endTime: data.endTime || "23:59",
+          weekdaysOnly: data.weekdaysOnly !== undefined ? data.weekdaysOnly : true,
+        });
+      }
+    }, (error) => {
+      console.error("Error loading game config:", error);
+    });
+
+    return () => {
+      unsubConfig();
+    };
   }, []);
 
+  // Periodic active state checker
+  useEffect(() => {
+    setIsAvailable(isGameAvailable(config));
+    const interval = setInterval(() => {
+      setIsAvailable(isGameAvailable(config));
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [config]);
+
   const startGame = useCallback((difficulty: Difficulty = "medium") => {
+    if (!isGameAvailable(config)) {
+      alert("The game is currently unavailable. Please check the operating hours.");
+      return;
+    }
+
     const stored = getStoredData();
     const difficultyPlays = stored.playsPerDifficulty[difficulty] || 0;
     if (difficultyPlays >= DAILY_PLAY_LIMIT) return;
@@ -315,5 +379,5 @@ export function useMemoryGame() {
     return () => stopTimer();
   }, [stopTimer]);
 
-  return { state, startGame, flipCard, resetGame };
+  return { state, startGame, flipCard, resetGame, config, isAvailable };
 }
