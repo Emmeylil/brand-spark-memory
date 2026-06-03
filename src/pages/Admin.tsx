@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Mail, TrendingUp, Trash2, Download, Trophy, LogOut, Image as ImageIcon, Plus, LayoutGrid, Calendar, SlidersHorizontal } from "lucide-react";
+import { Users, Mail, TrendingUp, Trash2, Download, Trophy, LogOut, Image as ImageIcon, Plus, LayoutGrid, Calendar, SlidersHorizontal, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 import { useFirebaseAuth } from "@/context/FirebaseAuthContext";
 import { Switch } from "@/components/ui/switch";
@@ -35,6 +35,130 @@ export default function Admin() {
     const [addingCard, setAddingCard] = useState(false);
     const [newCard, setNewCard] = useState({ name: "", imageUrl: "" });
     const { logout } = useFirebaseAuth();
+
+    const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
+
+    const [leaderboardView, setLeaderboardView] = useState<"daily" | "raw">("daily");
+    const [selectedDailyDate, setSelectedDailyDate] = useState<string>(() => {
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, "0");
+        const d = String(now.getDate()).padStart(2, "0");
+        return `${y}-${m}-${d}`;
+    });
+
+    const handleCopyEmail = (email: string) => {
+        navigator.clipboard.writeText(email);
+        setCopiedEmail(email);
+        toast.success("Email address copied!");
+        setTimeout(() => setCopiedEmail(null), 2000);
+    };
+
+    const getRankedLeaderboardForDate = (dateStrYMD: string): PlayerRecord[] => {
+        const dayEntries = players.filter(player => {
+            if (!player.timestamp) return false;
+            const playDate = new Date(player.timestamp.seconds * 1000);
+            const y = playDate.getFullYear();
+            const m = String(playDate.getMonth() + 1).padStart(2, "0");
+            const d = String(playDate.getDate()).padStart(2, "0");
+            const recordDateYMD = `${y}-${m}-${d}`;
+            return recordDateYMD === dateStrYMD;
+        });
+
+        const bestUserEntryMap: Record<string, PlayerRecord> = {};
+        dayEntries.forEach(entry => {
+            const email = entry.email.toLowerCase().trim();
+            const existing = bestUserEntryMap[email];
+            if (!existing) {
+                bestUserEntryMap[email] = entry;
+            } else {
+                if (entry.score > existing.score) {
+                    bestUserEntryMap[email] = entry;
+                } else if (entry.score === existing.score) {
+                    if (entry.timeTaken < existing.timeTaken) {
+                        bestUserEntryMap[email] = entry;
+                    }
+                }
+            }
+        });
+
+        return Object.values(bestUserEntryMap).sort((a, b) => {
+            if (b.score !== a.score) {
+                return b.score - a.score;
+            }
+            return a.timeTaken - b.timeTaken;
+        });
+    };
+
+    const getDailyWinners = (): { dateLabel: string; dateStr: string; winners: PlayerRecord[] }[] => {
+        const dayEntriesMap: Record<string, PlayerRecord[]> = {};
+        
+        players.forEach(player => {
+            if (!player.timestamp) return;
+            const playDate = new Date(player.timestamp.seconds * 1000);
+            const dateStr = playDate.toDateString();
+            if (!dayEntriesMap[dateStr]) {
+                dayEntriesMap[dateStr] = [];
+            }
+            dayEntriesMap[dateStr].push(player);
+        });
+
+        const dailyWinnersList: { dateLabel: string; dateStr: string; winners: PlayerRecord[] }[] = [];
+
+        Object.keys(dayEntriesMap).forEach(dateStr => {
+            const dayEntries = dayEntriesMap[dateStr];
+            
+            const bestUserEntryMap: Record<string, PlayerRecord> = {};
+            dayEntries.forEach(entry => {
+                const email = entry.email.toLowerCase().trim();
+                const existing = bestUserEntryMap[email];
+                if (!existing) {
+                    bestUserEntryMap[email] = entry;
+                } else {
+                    if (entry.score > existing.score) {
+                        bestUserEntryMap[email] = entry;
+                    } else if (entry.score === existing.score) {
+                        if (entry.timeTaken < existing.timeTaken) {
+                            bestUserEntryMap[email] = entry;
+                        }
+                    }
+                }
+            });
+
+            const sortedUnique = Object.values(bestUserEntryMap).sort((a, b) => {
+                if (b.score !== a.score) {
+                    return b.score - a.score;
+                }
+                return a.timeTaken - b.timeTaken;
+            });
+
+            const winners = sortedUnique.slice(0, 3);
+
+            const dateObj = new Date(dateStr);
+            const today = new Date();
+            const yesterday = new Date();
+            yesterday.setDate(today.getDate() - 1);
+
+            let dateLabel = "";
+            if (dateObj.toDateString() === today.toDateString()) {
+                dateLabel = "Today";
+            } else if (dateObj.toDateString() === yesterday.toDateString()) {
+                dateLabel = "Yesterday";
+            } else {
+                dateLabel = dateObj.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
+            }
+
+            dailyWinnersList.push({
+                dateLabel,
+                dateStr,
+                winners
+            });
+        });
+
+        return dailyWinnersList.sort((a, b) => {
+            return new Date(b.dateStr).getTime() - new Date(a.dateStr).getTime();
+        });
+    };
 
     const [config, setConfig] = useState({
         startTime: "08:00",
@@ -268,6 +392,10 @@ export default function Admin() {
                             <Trophy className="w-4 h-4 mr-2" />
                             Leaderboard
                         </TabsTrigger>
+                        <TabsTrigger value="winners" className="rounded-xl px-6 py-2.5 font-bold data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
+                            <Trophy className="w-4 h-4 mr-2" />
+                            Daily Winners
+                        </TabsTrigger>
                         <TabsTrigger value="cards" className="rounded-xl px-6 py-2.5 font-bold data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
                             <ImageIcon className="w-4 h-4 mr-2" />
                             Game Cards
@@ -280,147 +408,408 @@ export default function Admin() {
 
                     <TabsContent value="leaderboard" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <Card className="glass-card rounded-3xl shadow-xl border-none overflow-hidden">
-                            <CardHeader className="bg-white/50 border-b border-border p-6">
-                                <div className="flex items-center gap-2">
-                                    <TrendingUp className="text-primary w-5 h-5" />
-                                    <CardTitle className="text-xl font-black">Score History</CardTitle>
+                            <CardHeader className="bg-white/50 border-b border-border p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                <div className="space-y-1">
+                                    <div className="flex items-center gap-2">
+                                        <TrendingUp className="text-primary w-5 h-5" />
+                                        <CardTitle className="text-xl font-black">
+                                            {leaderboardView === "daily" ? "Daily Leaderboard" : "Raw Score History"}
+                                        </CardTitle>
+                                    </div>
+                                    <CardDescription className="font-medium">
+                                        {leaderboardView === "daily" 
+                                            ? "Ranked unique players for a selected date" 
+                                            : "All individual game sessions across all difficulties"}
+                                    </CardDescription>
                                 </div>
-                                <CardDescription className="font-medium">All recorded game sessions across all difficulties</CardDescription>
-                            </CardHeader>
-                            
-                            {/* Filter Section */}
-                            <div className="bg-white/30 border-b border-border p-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 items-end">
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-                                        <Trophy className="w-3 h-3 text-primary" /> Min Score
-                                    </label>
-                                    <Input
-                                        type="number"
-                                        placeholder="Min score"
-                                        value={scoreMin}
-                                        onChange={(e) => setScoreMin(e.target.value)}
-                                        className="bg-white/50 border-primary/10 rounded-xl h-11 focus-visible:ring-primary"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-                                        <Trophy className="w-3 h-3 text-primary" /> Max Score
-                                    </label>
-                                    <Input
-                                        type="number"
-                                        placeholder="Max score"
-                                        value={scoreMax}
-                                        onChange={(e) => setScoreMax(e.target.value)}
-                                        className="bg-white/50 border-primary/10 rounded-xl h-11 focus-visible:ring-primary"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-                                        <Calendar className="w-3 h-3 text-primary" /> Start Date
-                                    </label>
-                                    <Input
-                                        type="date"
-                                        value={dateStart}
-                                        onChange={(e) => setDateStart(e.target.value)}
-                                        className="bg-white/50 border-primary/10 rounded-xl h-11 focus-visible:ring-primary font-medium"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-                                        <Calendar className="w-3 h-3 text-primary" /> End Date
-                                    </label>
-                                    <Input
-                                        type="date"
-                                        value={dateEnd}
-                                        onChange={(e) => setDateEnd(e.target.value)}
-                                        className="bg-white/50 border-primary/10 rounded-xl h-11 focus-visible:ring-primary font-medium"
-                                    />
-                                </div>
-                                <div>
+                                <div className="flex bg-muted p-1 rounded-xl border border-muted-foreground/10 self-start sm:self-center">
                                     <Button
-                                        variant="outline"
-                                        disabled={!scoreMin && !scoreMax && !dateStart && !dateEnd}
-                                        onClick={() => {
-                                            setScoreMin("");
-                                            setScoreMax("");
-                                            setDateStart("");
-                                            setDateEnd("");
-                                        }}
-                                        className="w-full h-11 rounded-xl font-bold border-primary/10 bg-primary/5 hover:bg-primary/10 text-primary transition-all disabled:opacity-50"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setLeaderboardView("daily")}
+                                        className={`rounded-lg px-4 py-2 text-xs font-bold transition-all ${
+                                            leaderboardView === "daily" 
+                                                ? "bg-white text-foreground shadow-sm hover:bg-white" 
+                                                : "text-muted-foreground hover:text-foreground"
+                                        }`}
                                     >
-                                        <SlidersHorizontal className="w-4 h-4 mr-2" />
-                                        Reset
+                                        Daily Leaderboard
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setLeaderboardView("raw")}
+                                        className={`rounded-lg px-4 py-2 text-xs font-bold transition-all ${
+                                            leaderboardView === "raw" 
+                                                ? "bg-white text-foreground shadow-sm hover:bg-white" 
+                                                : "text-muted-foreground hover:text-foreground"
+                                        }`}
+                                    >
+                                        Raw History
                                     </Button>
                                 </div>
-                            </div>
+                            </CardHeader>
+                            
+                            {leaderboardView === "daily" ? (
+                                <>
+                                    {/* Date Selection Panel */}
+                                    <div className="bg-white/30 border-b border-border p-6 flex flex-col sm:flex-row gap-4 items-end">
+                                        <div className="space-y-2 w-full sm:max-w-xs">
+                                            <label className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                                                📅 Select Leaderboard Date
+                                            </label>
+                                            <Input
+                                                type="date"
+                                                value={selectedDailyDate}
+                                                onChange={(e) => setSelectedDailyDate(e.target.value)}
+                                                className="bg-white/50 border-primary/10 rounded-xl h-11 focus-visible:ring-primary font-medium"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => {
+                                                    const now = new Date();
+                                                    const y = now.getFullYear();
+                                                    const m = String(now.getMonth() + 1).padStart(2, "0");
+                                                    const d = String(now.getDate()).padStart(2, "0");
+                                                    setSelectedDailyDate(`${y}-${m}-${d}`);
+                                                }}
+                                                className="h-11 rounded-xl font-bold border-primary/10 bg-primary/5 hover:bg-primary/10 text-primary transition-all"
+                                            >
+                                                Jump to Today
+                                            </Button>
+                                        </div>
+                                    </div>
 
-                            <CardContent className="p-0">
-                                <div className="overflow-x-auto">
-                                    <Table>
-                                        <TableHeader className="bg-muted/30">
-                                            <TableRow>
-                                                <TableHead className="font-black uppercase text-[10px] tracking-widest px-6">Player</TableHead>
-                                                <TableHead className="font-black uppercase text-[10px] tracking-widest px-6">Contact</TableHead>
-                                                <TableHead className="font-black uppercase text-[10px] tracking-widest px-6 text-right">Time</TableHead>
-                                                <TableHead className="font-black uppercase text-[10px] tracking-widest px-6 text-right">Score</TableHead>
-                                                <TableHead className="font-black uppercase text-[10px] tracking-widest px-6 text-right">Date</TableHead>
-                                                <TableHead className="font-black uppercase text-[10px] tracking-widest px-6 text-center">Action</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {loading ? (
-                                                <TableRow>
-                                                    <TableCell colSpan={6} className="text-center p-12">
-                                                        <div className="animate-spin rounded-full h-10 w-10 border-2 border-primary border-t-transparent mx-auto" />
-                                                    </TableCell>
-                                                </TableRow>
-                                            ) : sortedFilteredPlayers.map((player) => (
-                                                <TableRow key={player.id} className="hover:bg-primary/[0.02] transition-colors border-b border-muted/50 last:border-0">
-                                                    <TableCell className="font-bold px-6 py-4">{player.name}</TableCell>
-                                                    <TableCell className="px-6 py-4">
-                                                        <div className="flex items-center gap-2 text-muted-foreground text-sm font-medium">
-                                                            <Mail className="w-3.5 h-3.5" />
-                                                            {player.email}
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell className="text-right font-bold text-muted-foreground px-6 py-4">
-                                                        {player.timeTaken ? `${player.timeTaken}s` : '0s'}
-                                                    </TableCell>
-                                                    <TableCell className="text-right font-black text-primary text-lg px-6 py-4">
-                                                        {player.score.toLocaleString()}
-                                                    </TableCell>
-                                                    <TableCell className="text-right text-xs text-muted-foreground font-medium px-6 py-4">
-                                                        {player.timestamp ? new Date(player.timestamp.seconds * 1000).toLocaleDateString() : 'Just now'}
-                                                    </TableCell>
-                                                    <TableCell className="text-center px-6 py-4">
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive rounded-lg"
-                                                            onClick={() => handleDeleteScore(player.id)}
-                                                        >
-                                                            <Trash2 className="w-4 h-4" />
-                                                        </Button>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
-                                            {!loading && players.length === 0 && (
-                                                <TableRow>
-                                                    <TableCell colSpan={6} className="text-center p-12 text-muted-foreground italic">
-                                                        No scores recorded yet.
-                                                    </TableCell>
-                                                </TableRow>
-                                            )}
-                                            {!loading && players.length > 0 && filteredPlayers.length === 0 && (
-                                                <TableRow>
-                                                    <TableCell colSpan={6} className="text-center p-12 text-muted-foreground italic">
-                                                        No scores matching the current filters.
-                                                    </TableCell>
-                                                </TableRow>
-                                            )}
-                                        </TableBody>
-                                    </Table>
+                                    <CardContent className="p-0">
+                                        <div className="overflow-x-auto">
+                                            <Table>
+                                                <TableHeader className="bg-muted/30">
+                                                    <TableRow>
+                                                        <TableHead className="font-black uppercase text-[10px] tracking-widest px-6 w-20">Rank</TableHead>
+                                                        <TableHead className="font-black uppercase text-[10px] tracking-widest px-6">Player</TableHead>
+                                                        <TableHead className="font-black uppercase text-[10px] tracking-widest px-6">Contact</TableHead>
+                                                        <TableHead className="font-black uppercase text-[10px] tracking-widest px-6 text-right">Time</TableHead>
+                                                        <TableHead className="font-black uppercase text-[10px] tracking-widest px-6 text-right">Best Score</TableHead>
+                                                        <TableHead className="font-black uppercase text-[10px] tracking-widest px-6 text-center">Action</TableHead>
+                                                    </TableRow>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {loading ? (
+                                                        <TableRow>
+                                                            <TableCell colSpan={6} className="text-center p-12">
+                                                                <div className="animate-spin rounded-full h-10 w-10 border-2 border-primary border-t-transparent mx-auto" />
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ) : getRankedLeaderboardForDate(selectedDailyDate).map((player, index) => {
+                                                        const isTop3 = index < 3;
+                                                        const medal = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`;
+                                                        
+                                                        return (
+                                                            <TableRow key={player.id} className="hover:bg-primary/[0.02] transition-colors border-b border-muted/50 last:border-0">
+                                                                <TableCell className="px-6 py-4 font-black text-center text-sm">
+                                                                    {isTop3 ? <span className="text-xl">{medal}</span> : <span className="text-muted-foreground">{medal}</span>}
+                                                                </TableCell>
+                                                                <TableCell className="font-bold px-6 py-4">
+                                                                    <div className="flex items-center gap-2">
+                                                                        {player.name}
+                                                                        {index === 0 && (
+                                                                            <span className="bg-yellow-500/15 text-yellow-700 dark:text-yellow-500 text-[9px] uppercase px-2 py-0.5 rounded-full font-black">Winner</span>
+                                                                        )}
+                                                                    </div>
+                                                                </TableCell>
+                                                                <TableCell className="px-6 py-4">
+                                                                    <div className="flex items-center gap-2 text-muted-foreground text-sm font-medium">
+                                                                        <Mail className="w-3.5 h-3.5" />
+                                                                        {player.email}
+                                                                    </div>
+                                                                </TableCell>
+                                                                <TableCell className="text-right font-bold text-muted-foreground px-6 py-4">
+                                                                    {player.timeTaken ? `${player.timeTaken}s` : '0s'} ({player.difficulty})
+                                                                </TableCell>
+                                                                <TableCell className="text-right font-black text-primary text-lg px-6 py-4">
+                                                                    {player.score.toLocaleString()}
+                                                                </TableCell>
+                                                                <TableCell className="text-center px-6 py-4">
+                                                                    <div className="flex justify-center gap-2">
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="icon"
+                                                                            className="h-8 w-8 text-muted-foreground hover:text-foreground rounded-lg"
+                                                                            onClick={() => handleCopyEmail(player.email)}
+                                                                        >
+                                                                            {copiedEmail === player.email ? (
+                                                                                <Check className="w-4 h-4 text-green-600" />
+                                                                            ) : (
+                                                                                <Copy className="w-4 h-4" />
+                                                                            )}
+                                                                        </Button>
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="icon"
+                                                                            className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive rounded-lg"
+                                                                            onClick={() => handleDeleteScore(player.id)}
+                                                                        >
+                                                                            <Trash2 className="w-4 h-4" />
+                                                                        </Button>
+                                                                    </div>
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        );
+                                                    })}
+                                                    {!loading && getRankedLeaderboardForDate(selectedDailyDate).length === 0 && (
+                                                        <TableRow>
+                                                            <TableCell colSpan={6} className="text-center p-12 text-muted-foreground italic">
+                                                                No entries recorded for this date.
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    )}
+                                                </TableBody>
+                                            </Table>
+                                        </div>
+                                    </CardContent>
+                                </>
+                            ) : (
+                                <>
+                                    {/* Filter Section */}
+                                    <div className="bg-white/30 border-b border-border p-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 items-end">
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                                                <Trophy className="w-3 h-3 text-primary" /> Min Score
+                                            </label>
+                                            <Input
+                                                type="number"
+                                                placeholder="Min score"
+                                                value={scoreMin}
+                                                onChange={(e) => setScoreMin(e.target.value)}
+                                                className="bg-white/50 border-primary/10 rounded-xl h-11 focus-visible:ring-primary"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                                                <Trophy className="w-3 h-3 text-primary" /> Max Score
+                                            </label>
+                                            <Input
+                                                type="number"
+                                                placeholder="Max score"
+                                                value={scoreMax}
+                                                onChange={(e) => setScoreMax(e.target.value)}
+                                                className="bg-white/50 border-primary/10 rounded-xl h-11 focus-visible:ring-primary"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                                                <Calendar className="w-3 h-3 text-primary" /> Start Date
+                                            </label>
+                                            <Input
+                                                type="date"
+                                                value={dateStart}
+                                                onChange={(e) => setDateStart(e.target.value)}
+                                                className="bg-white/50 border-primary/10 rounded-xl h-11 focus-visible:ring-primary font-medium"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                                                <Calendar className="w-3 h-3 text-primary" /> End Date
+                                            </label>
+                                            <Input
+                                                type="date"
+                                                value={dateEnd}
+                                                onChange={(e) => setDateEnd(e.target.value)}
+                                                className="bg-white/50 border-primary/10 rounded-xl h-11 focus-visible:ring-primary font-medium"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Button
+                                                variant="outline"
+                                                disabled={!scoreMin && !scoreMax && !dateStart && !dateEnd}
+                                                onClick={() => {
+                                                    setScoreMin("");
+                                                    setScoreMax("");
+                                                    setDateStart("");
+                                                    setDateEnd("");
+                                                }}
+                                                className="w-full h-11 rounded-xl font-bold border-primary/10 bg-primary/5 hover:bg-primary/10 text-primary transition-all disabled:opacity-50"
+                                            >
+                                                <SlidersHorizontal className="w-4 h-4 mr-2" />
+                                                Reset
+                                            </Button>
+                                        </div>
+                                    </div>
+
+                                    <CardContent className="p-0">
+                                        <div className="overflow-x-auto">
+                                            <Table>
+                                                <TableHeader className="bg-muted/30">
+                                                    <TableRow>
+                                                        <TableHead className="font-black uppercase text-[10px] tracking-widest px-6">Player</TableHead>
+                                                        <TableHead className="font-black uppercase text-[10px] tracking-widest px-6">Contact</TableHead>
+                                                        <TableHead className="font-black uppercase text-[10px] tracking-widest px-6 text-right">Time</TableHead>
+                                                        <TableHead className="font-black uppercase text-[10px] tracking-widest px-6 text-right">Score</TableHead>
+                                                        <TableHead className="font-black uppercase text-[10px] tracking-widest px-6 text-right">Date</TableHead>
+                                                        <TableHead className="font-black uppercase text-[10px] tracking-widest px-6 text-center">Action</TableHead>
+                                                    </TableRow>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {loading ? (
+                                                        <TableRow>
+                                                            <TableCell colSpan={6} className="text-center p-12">
+                                                                <div className="animate-spin rounded-full h-10 w-10 border-2 border-primary border-t-transparent mx-auto" />
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ) : sortedFilteredPlayers.map((player) => (
+                                                        <TableRow key={player.id} className="hover:bg-primary/[0.02] transition-colors border-b border-muted/50 last:border-0">
+                                                            <TableCell className="font-bold px-6 py-4">{player.name}</TableCell>
+                                                            <TableCell className="px-6 py-4">
+                                                                <div className="flex items-center gap-2 text-muted-foreground text-sm font-medium">
+                                                                    <Mail className="w-3.5 h-3.5" />
+                                                                    {player.email}
+                                                                </div>
+                                                            </TableCell>
+                                                            <TableCell className="text-right font-bold text-muted-foreground px-6 py-4">
+                                                                {player.timeTaken ? `${player.timeTaken}s` : '0s'}
+                                                            </TableCell>
+                                                            <TableCell className="text-right font-black text-primary text-lg px-6 py-4">
+                                                                {player.score.toLocaleString()}
+                                                            </TableCell>
+                                                            <TableCell className="text-right text-xs text-muted-foreground font-medium px-6 py-4">
+                                                                {player.timestamp ? new Date(player.timestamp.seconds * 1000).toLocaleDateString() : 'Just now'}
+                                                            </TableCell>
+                                                            <TableCell className="text-center px-6 py-4">
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive rounded-lg"
+                                                                    onClick={() => handleDeleteScore(player.id)}
+                                                                >
+                                                                    <Trash2 className="w-4 h-4" />
+                                                                </Button>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                    {!loading && players.length === 0 && (
+                                                        <TableRow>
+                                                            <TableCell colSpan={6} className="text-center p-12 text-muted-foreground italic">
+                                                                No scores recorded yet.
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    )}
+                                                    {!loading && players.length > 0 && filteredPlayers.length === 0 && (
+                                                        <TableRow>
+                                                            <TableCell colSpan={6} className="text-center p-12 text-muted-foreground italic">
+                                                                No scores matching the current filters.
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    )}
+                                                </TableBody>
+                                            </Table>
+                                        </div>
+                                    </CardContent>
+                                </>
+                            )}
+                        </Card>
+                    </TabsContent>
+
+                    <TabsContent value="winners" className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
+                        <Card className="glass-card rounded-3xl shadow-xl border-none overflow-hidden">
+                            <CardHeader className="bg-white/50 border-b border-border p-6">
+                                <div className="flex items-center gap-2">
+                                    <Trophy className="text-primary w-5 h-5" />
+                                    <CardTitle className="text-xl font-black">Daily Winners Showcase</CardTitle>
                                 </div>
+                                <CardDescription className="font-medium">Top 3 unique players of each day, ranked by score and speed</CardDescription>
+                            </CardHeader>
+                            <CardContent className="p-6">
+                                {loading ? (
+                                    <div className="text-center p-12">
+                                        <div className="animate-spin rounded-full h-10 w-10 border-2 border-primary border-t-transparent mx-auto" />
+                                    </div>
+                                ) : getDailyWinners().length === 0 ? (
+                                    <div className="text-center py-12 text-muted-foreground font-medium italic">
+                                        No entries recorded yet.
+                                    </div>
+                                ) : (
+                                    <div className="space-y-8">
+                                        {getDailyWinners().map((dayGroup) => (
+                                            <div key={dayGroup.dateStr} className="space-y-4 bg-white/20 p-6 rounded-2xl border border-primary/10 shadow-sm">
+                                                <div className="flex items-center justify-between border-b border-primary/10 pb-3">
+                                                    <h3 className="text-lg font-black text-primary flex items-center gap-2">
+                                                        📅 {dayGroup.dateLabel}
+                                                    </h3>
+                                                    <span className="text-xs font-bold text-muted-foreground bg-white/60 px-3 py-1 rounded-full border border-border">
+                                                        {dayGroup.winners.length} Winner{dayGroup.winners.length !== 1 ? 's' : ''}
+                                                    </span>
+                                                </div>
+                                                
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                                    {dayGroup.winners.map((winner, index) => {
+                                                        const rankMedal = index === 0 ? "🥇" : index === 1 ? "🥈" : "🥉";
+                                                        const rankLabel = index === 0 ? "1st Place (Daily Winner)" : index === 1 ? "2nd Place" : "3rd Place";
+                                                        const bgColors = index === 0 ? "bg-yellow-500/5 border-yellow-500/20" : index === 1 ? "bg-slate-400/5 border-slate-400/20" : "bg-amber-600/5 border-amber-600/20";
+                                                        
+                                                        return (
+                                                            <div key={winner.id} className={`p-4 rounded-xl border flex flex-col justify-between space-y-4 ${bgColors}`}>
+                                                                <div className="space-y-2">
+                                                                    <div className="flex items-center justify-between">
+                                                                        <span className="text-2xl">{rankMedal}</span>
+                                                                        <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground font-semibold">
+                                                                            {rankLabel}
+                                                                        </span>
+                                                                    </div>
+                                                                    <div>
+                                                                        <h4 className="font-bold text-base text-foreground truncate">{winner.name}</h4>
+                                                                        <p className="text-xs text-muted-foreground truncate">{winner.email}</p>
+                                                                    </div>
+                                                                </div>
+                                                                
+                                                                <div className="space-y-3">
+                                                                    <div className="bg-white/40 rounded-lg p-2.5 flex justify-between items-center text-xs font-bold">
+                                                                        <div>
+                                                                            <span className="text-[9px] text-muted-foreground uppercase block font-semibold">Score</span>
+                                                                            <span className="text-primary font-black text-sm">{winner.score.toLocaleString()}</span>
+                                                                        </div>
+                                                                        <div className="text-right">
+                                                                            <span className="text-[9px] text-muted-foreground uppercase block font-semibold">Time taken</span>
+                                                                            <span className="text-foreground">{winner.timeTaken}s ({winner.difficulty})</span>
+                                                                        </div>
+                                                                    </div>
+                                                                    
+                                                                    <div className="flex gap-2">
+                                                                        <Button 
+                                                                            variant="outline" 
+                                                                            size="sm"
+                                                                            onClick={() => handleCopyEmail(winner.email)}
+                                                                            className="flex-1 h-9 rounded-lg text-xs font-bold border-primary/10 hover:bg-primary/5"
+                                                                        >
+                                                                            {copiedEmail === winner.email ? (
+                                                                                <Check className="w-3.5 h-3.5 mr-1 text-green-600" />
+                                                                            ) : (
+                                                                                <Copy className="w-3.5 h-3.5 mr-1" />
+                                                                            )}
+                                                                            Copy
+                                                                        </Button>
+                                                                        <Button 
+                                                                            asChild 
+                                                                            variant="outline" 
+                                                                            size="sm"
+                                                                            className="flex-1 h-9 rounded-lg text-xs font-bold border-primary/10 hover:bg-primary/5 bg-primary/5 text-primary hover:text-primary"
+                                                                        >
+                                                                            <a href={`mailto:${winner.email}?subject=Jumia Memory Match Daily Winner!&body=Hello ${winner.name},%0D%0A%0D%0ACongratulations! You won ${rankLabel} in yesterday's Memory Match challenge with a score of ${winner.score.toLocaleString()}!`}>
+                                                                                <Mail className="w-3.5 h-3.5 mr-1" />
+                                                                                Email
+                                                                            </a>
+                                                                        </Button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
                     </TabsContent>

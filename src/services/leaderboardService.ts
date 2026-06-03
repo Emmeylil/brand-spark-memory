@@ -5,7 +5,8 @@ import {
     orderBy,
     limit,
     onSnapshot,
-    Timestamp
+    Timestamp,
+    where
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
@@ -44,12 +45,16 @@ export const submitScore = async (
 
 export const subscribeToLeaderboard = (
     callback: (scores: ScoreEntry[]) => void,
-    maxEntries: number = 100
+    daysLimit: number = 7
 ) => {
+    const dateLimit = new Date();
+    dateLimit.setDate(dateLimit.getDate() - daysLimit);
+    dateLimit.setHours(0, 0, 0, 0);
+
     const q = query(
         collection(db, SCORES_COLLECTION),
-        orderBy("timestamp", "desc"),
-        limit(maxEntries)
+        where("timestamp", ">=", Timestamp.fromDate(dateLimit)),
+        orderBy("timestamp", "desc")
     );
 
     return onSnapshot(q, (snapshot) => {
@@ -60,3 +65,4 @@ export const subscribeToLeaderboard = (
         callback(scores);
     });
 };
+
