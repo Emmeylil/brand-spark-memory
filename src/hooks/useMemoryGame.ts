@@ -241,7 +241,7 @@ export function useMemoryGame() {
     if (difficultyPlays >= DAILY_PLAY_LIMIT) return;
 
     stopTimer();
-    const config = DIFFICULTY_CONFIG[difficulty];
+    const diffConfig = DIFFICULTY_CONFIG[difficulty];
     const { cards, actualPairs } = createCards(difficulty, gameItems);
     flippedRef.current = [];
     lockRef.current = false;
@@ -255,7 +255,7 @@ export function useMemoryGame() {
       cards,
       flips: 0,
       score: 0,
-      timeLeft: config.time,
+      timeLeft: diffConfig.time,
       isWon: false,
       isLost: false,
       isStarted: true,
